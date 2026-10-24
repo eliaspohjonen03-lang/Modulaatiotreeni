@@ -66,7 +66,15 @@ export function PracticeView({ target, from, praise, snap, settings, onStart, on
         {praise ? (
           <div className="praise" key="praise">{praise}</div>
         ) : (
-          <div className="target" key={target.id}>{keyDisplayName(target)}</div>
+          <div className="target-wrap" key={target.id}>
+            {from && (
+              <div className="from-key" aria-label={`Lähtösävellaji ${keyDisplayName(from)}`}>
+                {keyDisplayName(from)}
+                <span className="from-arrow" aria-hidden>↓</span>
+              </div>
+            )}
+            <div className="target">{keyDisplayName(target)}</div>
+          </div>
         )}
         <div className="stage-actions">
           {!snap.running && (
