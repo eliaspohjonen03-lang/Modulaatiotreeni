@@ -1,8 +1,12 @@
-import { DEFAULT_CHROMA_OPTIONS, DEFAULT_TRACKER_OPTIONS, type Difficulty, type Instrument, type ModeFilter, type TimeSignature } from "./music";
+import {
+  ALL_SOUNDS, DEFAULT_CHROMA_OPTIONS, DEFAULT_TRACKER_OPTIONS, soundsWithAccidentals, type DistanceLevel, type Instrument, type TimeSignature,
+} from "./music";
 
 export interface Settings {
-  level: Difficulty;
-  modes: ModeFilter;
+  /** Mukana olevat sävellajit (soundId, esim. "major:0" = C-duuri) */
+  sounds: string[];
+  /** Modulaation vaikeus: etäisyys kvinttiympyrällä */
+  distance: DistanceLevel;
   /** "random" tai sävellajin id, esim. "major:C" */
   startKey: string;
   metronomeOn: boolean;
@@ -28,8 +32,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  level: "easy",
-  modes: "both",
+  sounds: soundsWithAccidentals(0, 2),
+  distance: "all",
   startKey: "major:C",
   metronomeOn: false,
   bpm: 80,
@@ -51,9 +55,12 @@ export const DEFAULT_SETTINGS: Settings = {
 
 const STORAGE_KEY = "modulaatiotreeni.settings.v1";
 /** Kasvatetaan, kun tunnistuksen oletusarvoja muutetaan: vanhat tallennetut arvot korvataan uusilla. */
-const SETTINGS_VERSION = 2;
+const SETTINGS_VERSION = 3;
 
-type Stored = Partial<Settings> & { v?: number };
+/** v1–v2: vaikeustaso etumerkkien mukaan + duurit/mollit */
+type Stored = Partial<Settings> & { v?: number; level?: "easy" | "medium" | "hard" | "all"; modes?: "major" | "minor" | "both" };
+
+const OLD_LEVELS = { easy: [0, 2], medium: [3, 4], hard: [5, 7], all: [0, 7] } as const;
 
 export function loadSettings(): Settings {
   try {
@@ -62,7 +69,15 @@ export function loadSettings(): Settings {
     const { v = 1, ...stored } = JSON.parse(raw) as Stored;
     // v2: yläsävelten vaimennuksen oletus 60 % → 0 % (oikeat pianonäytteet).
     if (v < 2) delete stored.harmonicSuppression;
-    return { ...DEFAULT_SETTINGS, ...stored };
+    // v3: etumerkkitaso → valitut sävellajit, uutena modulaation etäisyys.
+    const { level, modes, ...rest } = stored;
+    if (v < 3 && level) {
+      const [lo, hi] = OLD_LEVELS[level] ?? OLD_LEVELS.easy;
+      rest.sounds = soundsWithAccidentals(lo, hi).filter((id) => !modes || modes === "both" || id.startsWith(modes));
+    }
+    const merged = { ...DEFAULT_SETTINGS, ...rest };
+    merged.sounds = merged.sounds.filter((id) => ALL_SOUNDS.includes(id));
+    return merged;
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

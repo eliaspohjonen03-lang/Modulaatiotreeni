@@ -146,3 +146,39 @@ input[type="text"] { min-height: 48px; border-radius: 10px; border: 1px solid va
 .sample-result.good { color: var(--ok); }
 .sample-result.bad { color: var(--danger); }
 .sample-list { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+
+/* ---------- Sävellajien valinta ---------- */
+.key-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 6px; }
+.key-chip { min-width: 0; min-height: 44px; padding: 4px 2px; font-size: 15px; }
+
+/* ---------- Modulaatiovinkki ---------- */
+.stage-actions { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+.hint-btn {
+  min-height: 64px; padding: 0 28px; border-radius: 999px;
+  border: 1px solid var(--accent); background: transparent; color: var(--accent);
+  font-size: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
+}
+.hint-btn.open { background: var(--accent); color: var(--accent-ink); }
+.with-hint .target, .with-hint .praise { font-size: min(13vw, 12vh); }
+.with-hint .stage { flex: 0 0 auto; padding: 8px 0 12px; gap: 12px; }
+.hint-panel {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--surface); border-radius: var(--radius) var(--radius) 0 0;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;
+  animation: slide-up 220ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+.hint-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hint-head h2 { font-size: 20px; margin: 0; }
+.hint-head p { font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.route { border-top: 1px solid var(--line); padding-top: 12px; }
+.route h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 0 0 10px; }
+.route-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 4px; }
+.route-steps li { display: flex; flex-direction: column; align-items: center; min-width: 52px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); }
+.route-steps li.pivot { outline: 1px solid var(--accent); }
+.route-steps li.in-target b { color: var(--ok); }
+.route-steps b { font-size: 22px; line-height: 1.1; white-space: nowrap; }
+.route-steps span { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+.route-explain { font-size: 15px; margin: 10px 0 0; line-height: 1.4; }
+.route-legend { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+.more-btn { align-self: flex-start; }

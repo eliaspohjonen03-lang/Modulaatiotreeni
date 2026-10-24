@@ -10,7 +10,7 @@ import { TestPanel } from "./ui/TestPanel";
 
 const PRAISE_MS = 1500;
 
-const sessionSettings = (s: Settings) => ({ level: s.level, modes: s.modes, startKey: s.startKey });
+const sessionSettings = (s: Settings) => ({ sounds: s.sounds, distance: s.distance, startKey: s.startKey });
 
 export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings);
@@ -21,6 +21,7 @@ export function App() {
   sessionRef.current ??= new PracticeSession(sessionSettings(settings));
   const session = sessionRef.current;
   const [target, setTarget] = useState<MusicKey>(session.target);
+  const [from, setFrom] = useState<MusicKey | null>(null);
 
   const engineRef = useRef<PracticeEngine | null>(null);
   engineRef.current ??= new PracticeEngine(settings, session.target);
@@ -52,6 +53,7 @@ export function App() {
       window.setTimeout(() => {
         const next = session.advance();
         engine.setTarget(next);
+        setFrom(session.history.at(-1) ?? null);
         setTarget(next);
         setPraise(null);
         praiseActive.current = false;
@@ -75,6 +77,7 @@ export function App() {
   const restart = useCallback(() => {
     session.restart(sessionSettings(settings));
     engine.setTarget(session.target);
+    setFrom(null);
     setTarget(session.target);
     setView("practice");
   }, [engine, session, settings]);
@@ -101,6 +104,7 @@ export function App() {
   return (
     <PracticeView
       target={target}
+      from={from}
       praise={praise}
       snap={snap}
       settings={settings}

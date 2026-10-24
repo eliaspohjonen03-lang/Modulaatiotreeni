@@ -1,7 +1,8 @@
 import { useRef, useState, type ReactNode } from "react";
 import {
   ALL_KEYS, clampBpm, finnishNoteName, keyDisplayName, MAX_BPM, MAX_REF_A, MIN_BPM, MIN_REF_A, pcToName, signatureText, tapTempo,
-  type Difficulty, type ModeFilter, type SampleFile, type SampleMeta, type TimeSignature,
+  ALL_SOUNDS, SELECTABLE_KEYS, soundsWithAccidentals, spellingsOf,
+  type DistanceLevel, type SampleFile, type SampleMeta, type TimeSignature,
 } from "../music";
 import type { EngineSnapshot } from "../audio/engine";
 import { DEFAULT_SETTINGS, type Settings } from "../settings";
@@ -64,6 +65,53 @@ function Slider({ label, value, min, max, step, unit, onChange, format }: {
   );
 }
 
+const PRESETS: [string, string[]][] = [
+  ["0–2 etumerkkiä", soundsWithAccidentals(0, 2)],
+  ["3–4", soundsWithAccidentals(3, 4)],
+  ["5–6", soundsWithAccidentals(5, 7)],
+  ["Kaikki", [...ALL_SOUNDS]],
+];
+
+/** Sävellajin lyhyt nimi valintaruudukkoon: "Fis/Ges", "dis/es" */
+function shortName(sound: string): string {
+  return spellingsOf(sound)
+    .map((k) => (k.mode === "major" ? finnishNoteName(k.tonic) : finnishNoteName(k.tonic).toLowerCase()))
+    .join("/");
+}
+
+/** Mukana olevat sävellajit: pikavalinnat etumerkkien mukaan ja yksittäiset sävellajit. */
+function KeyPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const set = new Set(value);
+  const toggle = (sound: string) => onChange(set.has(sound) ? value.filter((x) => x !== sound) : [...value, sound]);
+  const togglePreset = (sounds: string[]) => {
+    const all = sounds.every((x) => set.has(x));
+    onChange(all ? value.filter((x) => !sounds.includes(x)) : [...new Set([...value, ...sounds])]);
+  };
+  return (
+    <>
+      <p className="label">Sävellajit mukana ({value.length}/{ALL_SOUNDS.length})</p>
+      <div className="preset-row">
+        {PRESETS.map(([label, sounds]) => (
+          <button key={label} className={`chip ${sounds.every((x) => set.has(x)) ? "sel" : ""}`} onClick={() => togglePreset(sounds)}>{label}</button>
+        ))}
+      </div>
+      {(["major", "minor"] as const).map((mode) => (
+        <div key={mode}>
+          <p className="label">{mode === "major" ? "Duurit" : "Mollit"}</p>
+          <div className="key-grid">
+            {SELECTABLE_KEYS.filter((k) => k.mode === mode).map(({ sound }) => (
+              <button key={sound} className={`chip key-chip ${set.has(sound) ? "sel" : ""}`} aria-pressed={set.has(sound)} onClick={() => toggle(sound)}>
+                {shortName(sound)}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {value.length === 0 && <p className="hint">Valitse vähintään yksi sävellaji. Nyt mukana ovat kaikki.</p>}
+    </>
+  );
+}
+
 const sortedKeys = (mode: "major" | "minor") => ALL_KEYS.filter((k) => k.mode === mode).sort((a, b) => a.accidentals - b.accidentals || Number(a.flats) - Number(b.flats));
 
 export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, onStartListening, onCalibrate, onRecordSample }: Props) {
@@ -106,14 +154,14 @@ export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, 
       </header>
 
       <Section title="Harjoitus">
-        <p className="label">Vaikeustaso (etumerkit)</p>
-        <Segmented<Difficulty> value={s.level} onChange={(level) => onChange({ level })} options={[["easy", "Helppo 0–2"], ["medium", "Keski 3–4"], ["hard", "Vaikea 5–7"], ["all", "Kaikki"]]} />
-        <p className="label">Sävellajit</p>
-        <Segmented<ModeFilter> value={s.modes} onChange={(modes) => onChange({ modes })} options={[["both", "Molemmat"], ["major", "Duurit"], ["minor", "Mollit"]]} />
+        <KeyPicker value={s.sounds} onChange={(sounds) => onChange({ sounds })} />
+        <p className="label">Vaikeustaso: modulaation etäisyys</p>
+        <Segmented<DistanceLevel> value={s.distance} onChange={(distance) => onChange({ distance })} options={[["near", "Lähi 0–1"], ["medium", "Keski 2–3"], ["far", "Kaukainen 4–6"], ["all", "Kaikki"]]} />
+        <p className="hint">Askeleet kvinttiympyrällä edellisestä sävellajista. Jos valituista sävellajeista ei löydy sopivan etäistä, valitaan lähin.</p>
         <label className="field">
           <span className="label">Lähtösävellaji</span>
           <select value={s.startKey} onChange={(e) => onChange({ startKey: e.target.value })}>
-            <option value="random">Arvo valitulta tasolta</option>
+            <option value="random">Arvo valituista</option>
             {(["major", "minor"] as const).map((mode) => (
               <optgroup key={mode} label={mode === "major" ? "Duurit" : "Mollit"}>
                 {sortedKeys(mode).map((k) => (

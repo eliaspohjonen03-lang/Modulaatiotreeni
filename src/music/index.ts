@@ -11,3 +11,4 @@ export * from "./metronomeMath";
 export * from "./tracker";
 export * from "./session";
 export * from "./sample";
+export * from "./modulation";

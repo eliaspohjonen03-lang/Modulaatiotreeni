@@ -1,12 +1,15 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { beatsPerBar, keyDisplayName, type MusicKey } from "../music";
 import type { EngineSnapshot } from "../audio/engine";
 import type { Settings } from "../settings";
 import { chordText, keyScoreName } from "./format";
+import { HintPanel } from "./HintPanel";
 import { LevelMeter } from "./LevelMeter";
 
 interface Props {
   target: MusicKey;
+  /** Sävellaji, josta moduloidaan (null = ensimmäinen tavoite) */
+  from: MusicKey | null;
   praise: string | null;
   snap: EngineSnapshot;
   settings: Settings;
@@ -17,13 +20,16 @@ interface Props {
   testPanel: ReactNode;
 }
 
-export function PracticeView({ target, praise, snap, settings, onStart, onStop, onOpenSettings, onToggleMetronome, testPanel }: Props) {
+export function PracticeView({ target, from, praise, snap, settings, onStart, onStop, onOpenSettings, onToggleMetronome, testPanel }: Props) {
   const beats = beatsPerBar(settings.signature, settings.customBeats);
   const sig = settings.signature === "custom" ? `${settings.customBeats}/4` : settings.signature;
   const showDiag = settings.showDiagnostics || settings.testMode;
+  const [hintOpen, setHintOpen] = useState(false);
+  // Uusi tavoite: vinkki piiloon, kunnes sitä pyydetään.
+  useEffect(() => setHintOpen(false), [target.id]);
 
   return (
-    <main className={`practice ${settings.testMode ? "with-test" : ""}`}>
+    <main className={`practice ${settings.testMode ? "with-test" : ""} ${hintOpen ? "with-hint" : ""}`}>
       <header className="topbar">
         <div className="status">
           {settings.testMode ? (
@@ -62,11 +68,21 @@ export function PracticeView({ target, praise, snap, settings, onStart, onStop, 
         ) : (
           <div className="target" key={target.id}>{keyDisplayName(target)}</div>
         )}
-        {!snap.running && (
-          <button className="start-btn" onClick={onStart}>
-            {settings.testMode ? "Aloita (testitila)" : "Aloita kuuntelu"}
-          </button>
-        )}
+        <div className="stage-actions">
+          {!snap.running && (
+            <button className="start-btn" onClick={onStart}>
+              {settings.testMode ? "Aloita (testitila)" : "Aloita kuuntelu"}
+            </button>
+          )}
+          {!praise && (
+            <button className={`hint-btn ${hintOpen ? "open" : ""}`} onClick={() => setHintOpen((o) => !o)} aria-expanded={hintOpen} aria-label="Modulaatiovinkki">
+              <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden>
+                <path fill="currentColor" d="M12 2a7 7 0 0 0-4.2 12.6c.7.5 1.2 1.3 1.2 2.2V18h6v-1.2c0-.9.5-1.7 1.2-2.2A7 7 0 0 0 12 2Zm-3 18v.5A1.5 1.5 0 0 0 10.5 22h3a1.5 1.5 0 0 0 1.5-1.5V20H9Z" />
+              </svg>
+              Vinkki
+            </button>
+          )}
+        </div>
         {snap.error && <p className="error">{snap.error}</p>}
       </section>
 
@@ -77,6 +93,8 @@ export function PracticeView({ target, praise, snap, settings, onStart, onStop, 
           {snap.support && <> · tavoite {snap.support.ok ? "✓" : "–"}</>}
         </p>
       )}
+
+      {hintOpen && !praise && <HintPanel key={`${from?.id}-${target.id}`} from={from} to={target} onClose={() => setHintOpen(false)} />}
 
       {settings.testMode && testPanel}
     </main>

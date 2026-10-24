@@ -14,6 +14,11 @@
 - `samples/` ei ole repossa (`.gitignore`), vaan näytteet ovat vain tällä koneella. Näytetestit ajetaan siksi vain paikallisesti.
 - iPhonella ei ole vielä testattu. Tarkistettavaa: äänimerkki äänettömällä, herkkyys, näytön pysyminen päällä. iPhonella tallennetut näytteet menevät Tiedostot-sovellukseen, josta ne siirretään `samples/`-kansioon.
 
+## Tehty: modulaatiovinkit ja uusi vaikeustaso
+- **Vinkki-nappi** (lamppu, ruudun keskellä tavoitteen alla) avaa sointureitin edellisestä sävellajista uuteen. Helpoin reitti näytetään ensin, ja "＋ Toinen tapa" näyttää seuraavan. Reitit lasketaan säännöillä (`src/music/modulation.ts`), ja testit käyvät läpi kaikki sävellajiparit.
+- **Asetukset:** "Sävellajit mukana" (24 valintaa + etumerkkipikavalinnat) ja "Vaikeustaso: modulaation etäisyys" (Lähi 0–1, Keski 2–3, Kaukainen 4–6 askelta kvinttiympyrällä). Vanha etumerkkitaso siirtyy automaattisesti sävellajivalinnaksi (`SETTINGS_VERSION` 3).
+- Pyydä kanttorikaverilta palautetta reittien musiikillisesta luontevuudesta. Järjestystä säädetään `rank`-arvoilla.
+
 ## Tehty 24.10.2026 illalla: ensimmäiset pianonäytteet
 - 9 pianonäytettä: C, G7, Am, F, D, kadenssi C-duurissa, kadenssi D-duurissa ("ei yliselkeästi") ja 2 × hiljaisuus.
 - **Syy "yliselkeästi soittamiseen" löytyi:** yläsävelvähennys (60 %) poisti oikeasti soitetun kvintin. Esim. C3–C4–E4–G4: G4 tulkittiin C3:n 3. osasäveleksi ja nollattiin. Sointu jäi pelkäksi C+E:ksi, pisteet olivat juuri ja juuri rajan (0,78) yläpuolella, ja pianon vaimetessa sointu katosi.

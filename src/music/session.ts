@@ -1,8 +1,9 @@
-import { keyById, pickNextKey, type Difficulty, type ModeFilter, type MusicKey } from "./keys";
+import { keyById, pickNextKey, type DistanceLevel, type MusicKey } from "./keys";
 
 export interface SessionSettings {
-  level: Difficulty;
-  modes: ModeFilter;
+  /** Mukana olevat sävellajit (soundId) */
+  sounds: readonly string[];
+  distance: DistanceLevel;
   /** Sävellajin id (esim. "major:C") tai "random" */
   startKey: string;
 }
@@ -13,6 +14,7 @@ export interface SessionSettings {
  */
 export class PracticeSession {
   target: MusicKey;
+  /** Aiemmat tavoitteet, uusin viimeisenä (viimeinen = sävellaji, josta nyt moduloidaan) */
   history: MusicKey[] = [];
   completed = 0;
 
@@ -30,8 +32,8 @@ export class PracticeSession {
 
   advance(): MusicKey {
     const next = pickNextKey({
-      level: this.settings.level,
-      modes: this.settings.modes,
+      sounds: this.settings.sounds,
+      distance: this.settings.distance,
       current: this.target,
       history: this.history,
       rng: this.rng,

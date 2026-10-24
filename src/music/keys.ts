@@ -1,9 +1,9 @@
 import { Key } from "tonal";
-import { finnishNoteName, nameToPc, type PitchClass } from "./notes";
+import { finnishNoteName, mod12, nameToPc, type PitchClass } from "./notes";
 
 export type Mode = "major" | "minor";
-export type Difficulty = "easy" | "medium" | "hard" | "all";
-export type ModeFilter = "major" | "minor" | "both";
+/** Modulaation vaikeus: etäisyys edellisestä sävellajista kvinttiympyrällä */
+export type DistanceLevel = "near" | "medium" | "far" | "all";
 
 export interface MusicKey {
   /** Esim. "major:F#" */
@@ -16,6 +16,8 @@ export interface MusicKey {
   accidentals: number;
   /** true = alennusetumerkintä */
   flats: boolean;
+  /** Paikka kvinttiympyrällä: ylennykset positiivisina, alennukset negatiivisina (C = 0, Es = -3) */
+  fifths: number;
 }
 
 const MAJOR_TONICS = ["C", "G", "D", "A", "E", "B", "F#", "C#", "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"];
@@ -30,6 +32,7 @@ function makeKey(tonic: string, mode: Mode): MusicKey {
     pc: nameToPc(tonic),
     accidentals: Math.abs(alteration),
     flats: alteration < 0,
+    fifths: alteration,
   };
 }
 
@@ -52,19 +55,42 @@ export function findKey(tonic: string, mode: Mode): MusicKey {
 /** Soiva tunniste: enharmoniset sävellajit (Fis-duuri / Ges-duuri) ovat sama ääni. */
 export const soundId = (k: MusicKey): string => `${k.mode}:${k.pc}`;
 
-export const DIFFICULTY_RANGES: Record<Difficulty, [number, number]> = {
-  easy: [0, 2],
-  medium: [3, 4],
-  hard: [5, 7],
-  all: [0, 7],
+/** Askeleet kvinttiympyrällä (0–6). Rinnakkaissävellajit (C / a) ovat 0 askeleen päässä. */
+export function fifthsDistance(a: MusicKey, b: MusicKey): number {
+  const d = mod12(a.fifths - b.fifths);
+  return Math.min(d, 12 - d);
+}
+
+export const DISTANCE_RANGES: Record<DistanceLevel, [number, number]> = {
+  near: [0, 1],
+  medium: [2, 3],
+  far: [4, 6],
+  all: [0, 6],
 };
 
-export function keysFor(level: Difficulty, modes: ModeFilter): MusicKey[] {
-  const [lo, hi] = DIFFICULTY_RANGES[level];
-  return ALL_KEYS.filter(
-    (k) => k.accidentals >= lo && k.accidentals <= hi && (modes === "both" || k.mode === modes),
-  );
+/** Valittavat sävellajit soivina (enharmoniset yhdessä), kvinttiympyrän järjestyksessä. */
+const CIRCLE_MAJOR = ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"];
+const CIRCLE_MINOR = ["A", "E", "B", "F#", "C#", "G#", "Eb", "Bb", "F", "C", "G", "D"];
+
+/** Kirjoitusasu, jota käytetään: vähiten etumerkkejä (Fis/Ges ja dis/es tasoissa → molemmat). */
+export function spellingsOf(sound: string): MusicKey[] {
+  const all = ALL_KEYS.filter((k) => soundId(k) === sound);
+  const min = Math.min(...all.map((k) => k.accidentals));
+  return all.filter((k) => k.accidentals === min);
 }
+
+/** 24 valittavaa sävellajia: [soundId, näytettävä sävellaji] */
+export const SELECTABLE_KEYS: { mode: Mode; sound: string; key: MusicKey }[] = [
+  ...CIRCLE_MAJOR.map((t) => findKey(t, "major")),
+  ...CIRCLE_MINOR.map((t) => findKey(t, "minor")),
+].map((key) => ({ mode: key.mode, sound: soundId(key), key }));
+
+/** Etumerkkimäärän mukaiset pikavalinnat (vähiten etumerkkejä käyttävän kirjoitusasun mukaan). */
+export function soundsWithAccidentals(lo: number, hi: number): string[] {
+  return SELECTABLE_KEYS.filter((s) => s.key.accidentals >= lo && s.key.accidentals <= hi).map((s) => s.sound);
+}
+
+export const ALL_SOUNDS: readonly string[] = SELECTABLE_KEYS.map((s) => s.sound);
 
 /** "Fis-duuri", "es-molli", "H-duuri", "b-molli" */
 export function keyDisplayName(k: MusicKey): string {
@@ -79,8 +105,9 @@ export function signatureText(k: MusicKey): string {
 }
 
 export interface PickOptions {
-  level: Difficulty;
-  modes: ModeFilter;
+  /** Mukana olevat sävellajit (soundId); tyhjä = kaikki */
+  sounds: readonly string[];
+  distance: DistanceLevel;
   /** Nykyinen tavoite (ei saa toistua) */
   current: MusicKey | null;
   /** Aiemmat tavoitteet, uusin viimeisenä */
@@ -91,38 +118,44 @@ export interface PickOptions {
 }
 
 /**
- * Arpoo seuraavan tavoitesävellajin valitun tason joukosta. Ei koskaan sama kuin
- * nykyinen eikä mikään kolmesta edellisestä. Jos joukko on niin pieni, ettei
- * ehtoa voi täyttää (esim. keskitaso + vain duurit = 4 sävellajia), vanhimpia
- * estoja löysätään yksi kerrallaan – nykyinen on silti aina kielletty.
- * Enharmoniset kirjoitusasut lasketaan samaksi sävellajiksi.
+ * Arpoo seuraavan tavoitesävellajin valituista. Ei koskaan sama kuin nykyinen
+ * eikä mikään kolmesta edellisestä; jos ehtoa ei voi täyttää, vanhimpia estoja
+ * löysätään yksi kerrallaan. Etäisyystaso rajaa ehdokkaat kvinttiympyrän
+ * askelten mukaan nykyisestä sävellajista. Jos valituista ei löydy yhtään
+ * sopivan etäistä, valitaan lähimpänä tasoa olevat.
  */
 export function pickNextKey(opts: PickOptions): MusicKey {
   const rng = opts.rng ?? Math.random;
   const avoidLast = opts.avoidLast ?? 3;
-  const pool = keysFor(opts.level, opts.modes);
-  if (pool.length === 0) throw new Error("Tyhjä sävellajijoukko");
+  const chosen = new Set(opts.sounds);
+  let pool = ALL_SOUNDS.filter((s) => chosen.has(s));
+  if (pool.length === 0) pool = [...ALL_SOUNDS];
 
-  const groups = new Map<string, MusicKey[]>();
-  for (const k of pool) {
-    const g = groups.get(soundId(k)) ?? [];
-    g.push(k);
-    groups.set(soundId(k), g);
-  }
-
-  const currentId = opts.current ? soundId(opts.current) : null;
+  const cur = opts.current;
+  const currentId = cur ? soundId(cur) : null;
   const recent = opts.history.slice(-avoidLast).map(soundId);
+  const [lo, hi] = DISTANCE_RANGES[opts.distance];
+  /** Kuinka monta askelta etäisyystason ulkopuolella (0 = sopii) */
+  const penalty = (id: string) => {
+    if (!cur) return 0;
+    const d = fifthsDistance(cur, spellingsOf(id)[0]);
+    return d < lo ? lo - d : d > hi ? d - hi : 0;
+  };
 
   let candidates: string[] = [];
-  for (let drop = 0; drop <= recent.length; drop++) {
+  for (let drop = 0; drop <= recent.length && candidates.length === 0; drop++) {
     const banned = new Set(recent.slice(drop));
     if (currentId) banned.add(currentId);
-    candidates = [...groups.keys()].filter((id) => !banned.has(id));
-    if (candidates.length > 0) break;
+    candidates = pool.filter((id) => !banned.has(id) && penalty(id) === 0);
   }
-  // Vain jos joukossa on ainoastaan nykyinen sävellaji (ei käytännössä mahdollista).
-  if (candidates.length === 0) candidates = [...groups.keys()];
+  if (candidates.length === 0) {
+    // Valituista ei löydy sopivan etäistä: lähimpänä tasoa olevat (nykyinen silti kielletty, jos mahdollista).
+    const others = pool.filter((id) => id !== currentId);
+    const rest = others.length > 0 ? others : pool;
+    const best = Math.min(...rest.map(penalty));
+    candidates = rest.filter((id) => penalty(id) === best);
+  }
 
-  const group = groups.get(candidates[Math.floor(rng() * candidates.length)])!;
-  return group[Math.floor(rng() * group.length)];
+  const spellings = spellingsOf(candidates[Math.floor(rng() * candidates.length)]);
+  return spellings[Math.floor(rng() * spellings.length)];
 }
