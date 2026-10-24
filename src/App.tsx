@@ -148,6 +148,7 @@ export function App() {
       onStop={stop}
       onOpenSettings={() => setView("settings")}
       onToggleMetronome={() => update({ metronomeOn: !settings.metronomeOn })}
+      onTempo={(bpm) => update({ bpm })}
       testPanel={<TestPanel target={target} onInput={onTestInput} />}
     />
   );

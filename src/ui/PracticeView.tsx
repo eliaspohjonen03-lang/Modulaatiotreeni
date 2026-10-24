@@ -5,7 +5,9 @@ import type { Settings } from "../settings";
 import { chordText, keyScoreName } from "./format";
 import { HintPanel } from "./HintPanel";
 import { LevelMeter } from "./LevelMeter";
+import { InstallHint } from "./InstallHint";
 import { StartChooser } from "./StartChooser";
+import { TempoBar } from "./TempoBar";
 
 interface Props {
   target: MusicKey;
@@ -21,10 +23,11 @@ interface Props {
   onStop: () => void;
   onOpenSettings: () => void;
   onToggleMetronome: () => void;
+  onTempo: (bpm: number) => void;
   testPanel: ReactNode;
 }
 
-export function PracticeView({ target, from, choosing, onChooseStart, praise, snap, settings, onStart, onStop, onOpenSettings, onToggleMetronome, testPanel }: Props) {
+export function PracticeView({ target, from, choosing, onChooseStart, praise, snap, settings, onStart, onStop, onOpenSettings, onToggleMetronome, onTempo, testPanel }: Props) {
   const beats = beatsPerBar(settings.signature, settings.customBeats);
   const sig = settings.signature === "custom" ? `${settings.customBeats}/4` : settings.signature;
   const showDiag = settings.showDiagnostics || settings.testMode;
@@ -107,6 +110,10 @@ export function PracticeView({ target, from, choosing, onChooseStart, praise, sn
           {snap.support && <> · tavoite {snap.support.ok ? "✓" : "–"}</>}
         </p>
       )}
+
+      {settings.metronomeOn && !hintOpen && <TempoBar bpm={settings.bpm} onChange={onTempo} />}
+
+      <InstallHint />
 
       {hintOpen && !praise && !choosing && <HintPanel key={`${from?.id}-${target.id}`} from={from} to={target} onClose={() => setHintOpen(false)} />}
 
