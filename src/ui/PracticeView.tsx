@@ -5,11 +5,15 @@ import type { Settings } from "../settings";
 import { chordText, keyScoreName } from "./format";
 import { HintPanel } from "./HintPanel";
 import { LevelMeter } from "./LevelMeter";
+import { StartChooser } from "./StartChooser";
 
 interface Props {
   target: MusicKey;
   /** Sävellaji, josta moduloidaan (null = ensimmäinen tavoite) */
   from: MusicKey | null;
+  /** Lähtösävellaji valitaan vielä (ruudukosta tai soittamalla) */
+  choosing: boolean;
+  onChooseStart: (key: MusicKey | "random") => void;
   praise: string | null;
   snap: EngineSnapshot;
   settings: Settings;
@@ -20,7 +24,7 @@ interface Props {
   testPanel: ReactNode;
 }
 
-export function PracticeView({ target, from, praise, snap, settings, onStart, onStop, onOpenSettings, onToggleMetronome, testPanel }: Props) {
+export function PracticeView({ target, from, choosing, onChooseStart, praise, snap, settings, onStart, onStop, onOpenSettings, onToggleMetronome, testPanel }: Props) {
   const beats = beatsPerBar(settings.signature, settings.customBeats);
   const sig = settings.signature === "custom" ? `${settings.customBeats}/4` : settings.signature;
   const showDiag = settings.showDiagnostics || settings.testMode;
@@ -63,7 +67,9 @@ export function PracticeView({ target, from, praise, snap, settings, onStart, on
       </header>
 
       <section className="stage" aria-live="polite">
-        {praise ? (
+        {choosing ? (
+          <StartChooser listening={snap.running} instant={snap.instant} onChoose={onChooseStart} />
+        ) : praise ? (
           <div className="praise" key="praise">{praise}</div>
         ) : (
           <div className="target-wrap" key={target.id}>
@@ -82,7 +88,7 @@ export function PracticeView({ target, from, praise, snap, settings, onStart, on
               {settings.testMode ? "Aloita (testitila)" : "Aloita kuuntelu"}
             </button>
           )}
-          {!praise && (
+          {!praise && !choosing && (
             <button className={`hint-btn ${hintOpen ? "open" : ""}`} onClick={() => setHintOpen((o) => !o)} aria-expanded={hintOpen} aria-label="Modulaatiovinkki">
               <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden>
                 <path fill="currentColor" d="M12 2a7 7 0 0 0-4.2 12.6c.7.5 1.2 1.3 1.2 2.2V18h6v-1.2c0-.9.5-1.7 1.2-2.2A7 7 0 0 0 12 2Zm-3 18v.5A1.5 1.5 0 0 0 10.5 22h3a1.5 1.5 0 0 0 1.5-1.5V20H9Z" />
@@ -102,7 +108,7 @@ export function PracticeView({ target, from, praise, snap, settings, onStart, on
         </p>
       )}
 
-      {hintOpen && !praise && <HintPanel key={`${from?.id}-${target.id}`} from={from} to={target} onClose={() => setHintOpen(false)} />}
+      {hintOpen && !praise && !choosing && <HintPanel key={`${from?.id}-${target.id}`} from={from} to={target} onClose={() => setHintOpen(false)} />}
 
       {settings.testMode && testPanel}
     </main>

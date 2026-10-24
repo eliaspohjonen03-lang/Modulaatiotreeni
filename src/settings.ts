@@ -34,7 +34,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   sounds: soundsWithAccidentals(0, 2),
   distances: [...ALL_DISTANCES],
-  startKey: "major:C",
+  startKey: "ask",
   metronomeOn: false,
   bpm: 80,
   signature: "4/4",
@@ -55,7 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 const STORAGE_KEY = "modulaatiotreeni.settings.v1";
 /** Kasvatetaan, kun tunnistuksen oletusarvoja muutetaan: vanhat tallennetut arvot korvataan uusilla. */
-const SETTINGS_VERSION = 4;
+const SETTINGS_VERSION = 5;
 
 /** v1–v2: vaikeustaso etumerkkien mukaan + duurit/mollit; v3: yksi etäisyystaso */
 type Stored = Partial<Settings> & {
@@ -80,6 +80,8 @@ export function loadSettings(): Settings {
       const [lo, hi] = OLD_LEVELS[level] ?? OLD_LEVELS.easy;
       rest.sounds = soundsWithAccidentals(lo, hi).filter((id) => !modes || modes === "both" || id.startsWith(modes));
     }
+    // v5: uusi oletus "valitse tai soita aloitettaessa"; vanha oletus C-duuri vaihtuu siihen.
+    if (v < 5 && rest.startKey === "major:C") rest.startKey = "ask";
     // v4: yksi etäisyystaso → yhdisteltävät tasot.
     if (v < 4 && distance && distance !== "all") rest.distances = [distance];
     const merged = { ...DEFAULT_SETTINGS, ...rest };

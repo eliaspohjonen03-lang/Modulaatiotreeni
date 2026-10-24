@@ -45,6 +45,8 @@ export class PracticeEngine {
   private recording: { file: SampleFile; start: number; until: number; done: (f: SampleFile) => void } | null = null;
   testInput: TestInput | null = null;
   onCadence: (() => void) | null = null;
+  /** Uusi vakaa sointu (lähtösävellajin valinta soittamalla) */
+  onStableChord: ((c: Chord) => void) | null = null;
 
   snapshot: EngineSnapshot = {
     running: false, micOpen: false, levelDb: -120, aboveThreshold: false, instant: null, stable: null,
@@ -251,6 +253,7 @@ export class PracticeEngine {
     if (!masked && !frozen) {
       result = this.tracker.process(now, chroma, bass);
       if (result.cadence) this.onCadence?.();
+      if (result.change?.chord) this.onStableChord?.(result.change.chord);
     }
 
     this.snapshot = {

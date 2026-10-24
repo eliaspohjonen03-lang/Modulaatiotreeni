@@ -14,6 +14,10 @@
 - `samples/` ei ole repossa (`.gitignore`), vaan näytteet ovat vain tällä koneella. Näytetestit ajetaan siksi vain paikallisesti.
 - iPhonella ei ole vielä testattu. Tarkistettavaa: äänimerkki äänettömällä, herkkyys, näytön pysyminen päällä. iPhonella tallennetut näytteet menevät Tiedostot-sovellukseen, josta ne siirretään `samples/`-kansioon.
 
+## Tehty: lähtösävellaji valitaan tai soitetaan
+- Oletuksena (`startKey: "ask"`) sovellus kysyy aloitettaessa "Mistä lähdetään?". Vastaukseksi kelpaa ruudukko, arvonta tai soitettu vakaa duuri- tai mollisointu (`keyFromChord`, `engine.onStableChord`). Ensimmäinen tavoite arvotaan heti siitä (`PracticeSession.startFrom`).
+- Etäisyystasot ovat monivalinta (`distances`). Asetukset ovat versiossa `SETTINGS_VERSION` 5.
+
 ## Tehty: modulaatiovinkit ja uusi vaikeustaso
 - **Vinkki-nappi** (lamppu, ruudun keskellä tavoitteen alla) avaa sointureitin edellisestä sävellajista uuteen. Helpoin reitti näytetään ensin, ja "＋ Toinen tapa" näyttää seuraavan. Reitit lasketaan säännöillä (`src/music/modulation.ts`), ja testit käyvät läpi kaikki sävellajiparit.
 - **Asetukset:** "Sävellajit mukana" (24 valintaa + etumerkkipikavalinnat) ja "Vaikeustaso: modulaation etäisyys" (Lähi 0–1, Keski 2–3, Kaukainen 4–6 askelta kvinttiympyrällä). Vanha etumerkkitaso siirtyy automaattisesti sävellajivalinnaksi (`SETTINGS_VERSION` 3).

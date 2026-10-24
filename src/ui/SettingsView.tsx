@@ -1,11 +1,12 @@
 import { useRef, useState, type ReactNode } from "react";
 import {
   ALL_KEYS, clampBpm, finnishNoteName, keyDisplayName, MAX_BPM, MAX_REF_A, MIN_BPM, MIN_REF_A, pcToName, signatureText, tapTempo,
-  ALL_SOUNDS, SELECTABLE_KEYS, soundsWithAccidentals, spellingsOf,
+  ALL_SOUNDS, SELECTABLE_KEYS, soundsWithAccidentals,
   type DistanceLevel, type SampleFile, type SampleMeta, type TimeSignature,
 } from "../music";
 import type { EngineSnapshot } from "../audio/engine";
 import { DEFAULT_SETTINGS, type Settings } from "../settings";
+import { keyShortName } from "./format";
 import { LevelMeter } from "./LevelMeter";
 import { SampleRecorder } from "./SampleRecorder";
 
@@ -72,13 +73,6 @@ const PRESETS: [string, string[]][] = [
   ["Kaikki", [...ALL_SOUNDS]],
 ];
 
-/** Sävellajin lyhyt nimi valintaruudukkoon: "Fis/Ges", "dis/es" */
-function shortName(sound: string): string {
-  return spellingsOf(sound)
-    .map((k) => (k.mode === "major" ? finnishNoteName(k.tonic) : finnishNoteName(k.tonic).toLowerCase()))
-    .join("/");
-}
-
 /** Mukana olevat sävellajit: pikavalinnat etumerkkien mukaan ja yksittäiset sävellajit. */
 function KeyPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const set = new Set(value);
@@ -101,7 +95,7 @@ function KeyPicker({ value, onChange }: { value: string[]; onChange: (v: string[
           <div className="key-grid">
             {SELECTABLE_KEYS.filter((k) => k.mode === mode).map(({ sound }) => (
               <button key={sound} className={`chip key-chip ${set.has(sound) ? "sel" : ""}`} aria-pressed={set.has(sound)} onClick={() => toggle(sound)}>
-                {shortName(sound)}
+                {keyShortName(sound)}
               </button>
             ))}
           </div>
@@ -184,6 +178,7 @@ export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, 
         <label className="field">
           <span className="label">Lähtösävellaji</span>
           <select value={s.startKey} onChange={(e) => onChange({ startKey: e.target.value })}>
+            <option value="ask">Valitse tai soita aloitettaessa</option>
             <option value="random">Arvo valituista</option>
             {(["major", "minor"] as const).map((mode) => (
               <optgroup key={mode} label={mode === "major" ? "Duurit" : "Mollit"}>

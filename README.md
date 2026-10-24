@@ -31,7 +31,7 @@ Muut komennot:
 - **Rataskuvakkeesta** aukeavat asetukset: mukana olevat sävellajit, vaikeustaso (modulaation etäisyys kvinttiympyrällä), lähtösävellaji, metronomi, mikrofonin herkkyys, viritys, soinnun minimikesto, yläsävelten vaimennus, äänimerkki ja testitila.
 - **Sävellajit mukana:** valitse yksittäisiä duureja ja molleja tai käytä pikavalintoja etumerkkien mukaan (0–2, 3–4, 5–6, kaikki). Enharmoniset sävellajit (Fis/Ges, dis/es) ovat yksi valinta.
 - **Vaikeustaso** kertoo, kuinka kaukana seuraava tavoite on edellisestä kvinttiympyrällä: Lähi 0–1 askelta, Keski 2–3, Kaukainen 4–6 (6 = tritonus). Tasoja voi valita useamman, esim. Lähi + Keski. Jos valituista sävellajeista ei löydy sopivan etäistä, valitaan lähin.
-- **Lähtösävellaji** on ensimmäinen tavoite (oletus C-duuri). Kun olet tehnyt siinä kadenssin, kierre alkaa. Valinnat vaikuttavat seuraavasta arvonnasta alkaen. *Aloita alusta* -napista kierre alkaa uudelleen lähtösävellajista.
+- **Lähtösävellaji:** kun painat *Aloita kuuntelu*, sovellus kysyy "Mistä lähdetään?". Valitse sävellaji ruudukosta tai soita soittimella duuri- tai mollisointu ja pidä sitä hetki. Ensimmäinen tavoite arvotaan heti siitä eteenpäin. Asetuksista lähtösävellajiksi voi myös asettaa kiinteän sävellajin tai arvonnan, jolloin ensimmäinen tavoite on lähtösävellaji itse ja kierre alkaa sen kadenssista. *Aloita alusta* -napista kierre alkaa uudelleen.
 - Asetukset tallentuvat selaimen localStorageen.
 
 ### Testitila (ilman soitinta)

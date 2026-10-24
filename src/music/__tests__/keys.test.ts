@@ -3,7 +3,7 @@ import {
   ALL_KEYS, ALL_SOUNDS, DISTANCE_RANGES, fifthsDistance, findKey, keyDisplayName, pickNextKey, SELECTABLE_KEYS, soundId, soundsWithAccidentals,
   spellingsOf, type DistanceLevel, type MusicKey,
 } from "../keys";
-import { PracticeSession } from "../session";
+import { keyFromChord, PracticeSession } from "../session";
 
 /** Toistettava pseudosatunnaisgeneraattori */
 function seeded(seed: number) {
@@ -164,5 +164,28 @@ describe("seuraavan sävellajin arvonta", () => {
     const sounds = soundsWithAccidentals(3, 4).filter((s) => s.startsWith("minor"));
     const s = new PracticeSession({ sounds, distances: [], startKey: "random" }, seeded(1));
     expect(sounds).toContain(soundId(s.target));
+  });
+});
+
+describe("aloitus valitusta tai soitetusta sävellajista", () => {
+  it("soitettu sointu → lähtösävellaji", () => {
+    expect(keyFromChord({ root: 0, quality: "maj" })?.id).toBe("major:C");
+    expect(keyFromChord({ root: 9, quality: "min" })?.id).toBe("minor:A");
+    expect(keyFromChord({ root: 5, quality: "maj7" })?.id).toBe("major:F");
+    expect(keyFromChord({ root: 11, quality: "maj" })?.id).toBe("major:B"); // H-duuri, ei Ces
+    expect(keyFromChord({ root: 7, quality: "7" })).toBeNull();
+    expect(keyFromChord({ root: 11, quality: "dim" })).toBeNull();
+  });
+
+  it("startFrom: lähtösävellaji on edellinen, tavoite arvotaan siitä valitulla etäisyydellä", () => {
+    const session = new PracticeSession({ sounds: ALL_SOUNDS, distances: ["far"], startKey: "ask" }, seeded(4));
+    const start = findKey("C", "major");
+    const next = session.startFrom(start);
+    expect(session.history.at(-1)?.id).toBe("major:C");
+    expect(session.target).toBe(next);
+    expect(fifthsDistance(start, next)).toBeGreaterThanOrEqual(4);
+    expect(session.completed).toBe(0);
+    session.advance();
+    expect(session.completed).toBe(1);
   });
 });

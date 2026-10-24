@@ -194,3 +194,9 @@ input[type="text"] { min-height: 48px; border-radius: 10px; border: 1px solid va
 }
 .from-arrow { font-size: 0.9em; line-height: 1; margin: 0.1em 0 0.15em; opacity: 0.8; }
 .with-test .from-key, .with-hint .from-key { font-size: min(5vw, 4.5vh); }
+
+/* ---------- Lähtösävellajin valinta ---------- */
+.start-chooser { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 560px; }
+.start-chooser h1 { font-size: min(9vw, 9vh); margin: 0; }
+.start-chooser .hint { margin: 0; text-align: center; }
+.start-chooser .key-grid { width: 100%; margin: 0; }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PracticeEngine, type EngineSnapshot, type TestInput } from "./audio/engine";
 import { ScreenWakeLock } from "./audio/wakeLock";
-import { PracticeSession, type MusicKey } from "./music";
+import { keyFromChord, pickNextKey, PracticeSession, type MusicKey } from "./music";
 import { loadSettings, saveSettings, type Settings } from "./settings";
 import { randomPraise } from "./ui/format";
 import { PracticeView } from "./ui/PracticeView";
@@ -22,6 +22,10 @@ export function App() {
   const session = sessionRef.current;
   const [target, setTarget] = useState<MusicKey>(session.target);
   const [from, setFrom] = useState<MusicKey | null>(null);
+  // "Valitse tai soita aloitettaessa": kierros alkaa vasta, kun lähtösävellaji on valittu.
+  const [choosing, setChoosing] = useState(settings.startKey === "ask");
+  const choosingRef = useRef(choosing);
+  choosingRef.current = choosing;
 
   const engineRef = useRef<PracticeEngine | null>(null);
   engineRef.current ??= new PracticeEngine(settings, session.target);
@@ -61,6 +65,35 @@ export function App() {
     };
   }, [engine, session]);
 
+  const chooseStart = useCallback(
+    (picked: MusicKey | "random") => {
+      const key = picked === "random" ? pickNextKey({ sounds: settings.sounds, distances: [], current: null, history: [] }) : picked;
+      const next = session.startFrom(key);
+      engine.setTarget(next);
+      setFrom(key);
+      setTarget(next);
+      setChoosing(false);
+    },
+    [engine, session, settings.sounds],
+  );
+
+  // Lähtösävellaji vaihdettiin asetuksista kiinteäksi kesken valinnan: aloitetaan siitä.
+  useEffect(() => {
+    if (settings.startKey === "ask" || !choosingRef.current) return;
+    session.restart({ sounds: settings.sounds, distances: settings.distances, startKey: settings.startKey });
+    engine.setTarget(session.target);
+    setTarget(session.target);
+    setChoosing(false);
+  }, [settings.startKey, settings.sounds, settings.distances, engine, session]);
+
+  useEffect(() => {
+    engine.onStableChord = (chord) => {
+      if (!choosingRef.current) return;
+      const key = keyFromChord(chord);
+      if (key) chooseStart(key);
+    };
+  }, [engine, chooseStart]);
+
   const update = useCallback((patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch })), []);
 
   const start = useCallback(async () => {
@@ -79,6 +112,7 @@ export function App() {
     engine.setTarget(session.target);
     setFrom(null);
     setTarget(session.target);
+    setChoosing(settings.startKey === "ask");
     setView("practice");
   }, [engine, session, settings]);
 
@@ -105,6 +139,8 @@ export function App() {
     <PracticeView
       target={target}
       from={from}
+      choosing={choosing}
+      onChooseStart={chooseStart}
       praise={praise}
       snap={snap}
       settings={settings}

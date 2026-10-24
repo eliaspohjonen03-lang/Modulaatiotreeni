@@ -1,4 +1,11 @@
-import { ALL_KEYS, chordLabel, keyDisplayName, type Chord, type KeyScore, type MusicKey } from "../music";
+import { ALL_KEYS, chordLabel, finnishNoteName, keyDisplayName, spellingsOf, type Chord, type KeyScore, type MusicKey } from "../music";
+
+/** Sävellajin lyhyt nimi valintaruudukkoon: "Fis/Ges", "dis/es" */
+export function keyShortName(sound: string): string {
+  return spellingsOf(sound)
+    .map((k) => (k.mode === "major" ? finnishNoteName(k.tonic) : finnishNoteName(k.tonic).toLowerCase()))
+    .join("/");
+}
 
 /** Sävellajiarvion (sävelluokka + moodi) nimi yksinkertaisimmalla kirjoitusasulla. */
 export function keyScoreName(s: Pick<KeyScore, "pc" | "mode">): string {

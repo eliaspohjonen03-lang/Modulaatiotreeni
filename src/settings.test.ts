@@ -38,6 +38,13 @@ describe("asetusten tallennus", () => {
     expect(loadSettings()).toMatchObject({ sounds: ["major:0", "minor:9"], distances: ["near", "medium"] });
   });
 
+  it("v4 → v5: vanha oletus C-duuri muuttuu valinnaksi aloitettaessa, muu valinta säilyy", () => {
+    store.set(KEY, JSON.stringify({ v: 4, startKey: "major:C" }));
+    expect(loadSettings().startKey).toBe("ask");
+    store.set(KEY, JSON.stringify({ v: 4, startKey: "minor:E" }));
+    expect(loadSettings().startKey).toBe("minor:E");
+  });
+
   it("v3 → v4: yksi etäisyystaso muuttuu listaksi", () => {
     store.set(KEY, JSON.stringify({ v: 3, sounds: ["major:0"], distance: "far" }));
     expect(loadSettings().distances).toEqual(["far"]);
