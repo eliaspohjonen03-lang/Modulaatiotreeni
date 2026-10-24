@@ -14,7 +14,7 @@ export class MicInput {
     private source: MediaStreamAudioSourceNode,
   ) {
     const hp = new BiquadFilterNode(ctx, { type: "highpass", frequency: 45, Q: 0.7 });
-    // Neljä peräkkäistä alipäästöä ≈ 48 dB/oktaavi: 6–7 kHz klikki vaimenee ~70 dB.
+    // Neljä peräkkäistä alipäästöä ≈ 48 dB/oktaavi: vaimentaa metronomin (2,5–4,5 kHz) ja muun korkean äänen.
     const lps = Array.from({ length: 4 }, () => new BiquadFilterNode(ctx, { type: "lowpass", frequency: ANALYSIS_LOWPASS_HZ, Q: 0.7 }));
     this.analyser = new AnalyserNode(ctx, { fftSize: 16384, smoothingTimeConstant: 0, minDecibels: -120, maxDecibels: 0 });
     source.connect(hp);

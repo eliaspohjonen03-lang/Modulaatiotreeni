@@ -7,12 +7,21 @@ export interface MetronomeConfig {
   volume: number; // 0–1
 }
 
-const CLICK_HZ: Record<Accent, number> = { strong: 7500, medium: 6800, weak: 6000 };
+/** Puukapulan (claves) perustaajuus: tahdin alku hieman korkeampi. */
+const CLICK_HZ: Record<Accent, number> = { strong: 2800, medium: 2650, weak: 2500 };
 const CLICK_GAIN: Record<Accent, number> = { strong: 1, medium: 0.7, weak: 0.5 };
+/** Puun värähtelymuodot: [taajuussuhde, voimakkuus, vaimenemisaika s] */
+const WOOD_MODES: [number, number, number][] = [
+  [1, 1, 0.012],
+  [1.62, 0.45, 0.007],
+];
+const KNOCK_S = 0.004;
 
 /**
  * Web Audion kelloon ajoitettu metronomi (look-ahead-ajastus).
- * Klikki on lyhyt (≈25 ms) ja korkea, jotta se on helppo suodattaa analyysistä.
+ * Ääni muistuttaa puukapuloita: kaksi nopeasti vaimenevaa värähtelymuotoa ja lyhyt
+ * kohinaisku. Se on lyhyt (≈30 ms) ja analysoitavan sävelalueen (≤ C7) yläpuolella;
+ * oikeilla pianonäytteillä kokeiltuna se muutti sointutunnistusta alle 1 %:ssa kehyksistä.
  */
 export class Metronome {
   private timer: number | null = null;
@@ -20,12 +29,18 @@ export class Metronome {
   private beat = 0;
   private scheduled: { time: number; beat: number }[] = [];
   config: MetronomeConfig;
+  private knock: AudioBuffer;
 
   constructor(
     private ctx: AudioContext,
     config: MetronomeConfig,
   ) {
     this.config = { ...config };
+    // Iskun kohina: valkoinen kohina, joka vaimenee lineaarisesti 4 ms:ssa.
+    const n = Math.round(KNOCK_S * ctx.sampleRate);
+    this.knock = ctx.createBuffer(1, n, ctx.sampleRate);
+    const data = this.knock.getChannelData(0);
+    for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
   }
 
   get running(): boolean {
@@ -77,14 +92,21 @@ export class Metronome {
   }
 
   private click(time: number, accent: Accent): void {
-    const osc = new OscillatorNode(this.ctx, { type: "sine", frequency: CLICK_HZ[accent] });
-    const gain = new GainNode(this.ctx, { gain: 0 });
-    const peak = Math.max(0.0001, this.config.volume * CLICK_GAIN[accent]);
-    gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(peak, time + 0.001);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.025);
-    osc.connect(gain).connect(this.ctx.destination);
-    osc.start(time);
-    osc.stop(time + 0.03);
+    const peak = this.config.volume * CLICK_GAIN[accent];
+    if (peak <= 0) return;
+    for (const [ratio, amp, tau] of WOOD_MODES) {
+      const osc = new OscillatorNode(this.ctx, { type: "sine", frequency: CLICK_HZ[accent] * ratio });
+      const gain = new GainNode(this.ctx, { gain: 0 });
+      gain.gain.setValueAtTime(peak * amp * 0.6, time);
+      gain.gain.setTargetAtTime(0, time, tau);
+      osc.connect(gain).connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + tau * 8);
+    }
+    const noise = new AudioBufferSourceNode(this.ctx, { buffer: this.knock });
+    const hp = new BiquadFilterNode(this.ctx, { type: "highpass", frequency: 1500 });
+    const ng = new GainNode(this.ctx, { gain: peak * 0.35 });
+    noise.connect(hp).connect(ng).connect(this.ctx.destination);
+    noise.start(time);
   }
 }

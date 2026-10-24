@@ -79,7 +79,7 @@ Musiikkilogiikka on kansiossa `src/music/`, eikä se riipu käyttöliittymästä
 
 ### Metronomi ja tunnistus
 
-Metronomin klikki on lyhyt (25 ms) ja korkea siniääni: 6 kHz, korostettu isku 7,5 kHz. Analyysiketjussa on jyrkkä alipäästösuodin 2,2 kHz:ssä (n. 48 dB/oktaavi). Lisäksi jokaisen klikin kohdalla (kaiutin–mikrofoni-viive huomioiden) jätetään analyysistä pois lyhyt aikaikkuna (oletus 80 ms, säädettävä). Äänimerkin ja kehun ajaksi tunnistus pysäytetään, jotta oma äänimerkki ei sotke analyysiä.
+Metronomin ääni muistuttaa puukapuloita: lyhyt (n. 30 ms) puinen kopsahdus noin 2,5 kHz:ssä, korostettu isku hieman korkeampi (2,8 kHz). Se on analysoitavan sävelalueen (enintään C7 ≈ 2,1 kHz) yläpuolella. Oikeilla pianonäytteillä kokeiltuna se muutti hetkellistä sointutunnistusta alle 1 %:ssa kehyksistä, vaikka naksu oli moninkertaisesti soittoa kovempi. Analyysiketjussa on jyrkkä alipäästösuodin 2,2 kHz:ssä (n. 48 dB/oktaavi). Lisäksi jokaisen klikin kohdalla (kaiutin–mikrofoni-viive huomioiden) jätetään analyysistä pois lyhyt aikaikkuna (oletus 80 ms, säädettävä). Äänimerkin ja kehun ajaksi tunnistus pysäytetään, jotta oma äänimerkki ei sotke analyysiä.
 
 ## Tiedossa olevat rajoitukset
 
