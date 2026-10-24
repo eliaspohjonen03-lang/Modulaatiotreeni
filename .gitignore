@@ -1,0 +1,5 @@
+node_modules
+dist
+*.tsbuildinfo
+# Testinäytteet pysyvät vain omalla koneella (eivät julkiseen repoon)
+samples/
