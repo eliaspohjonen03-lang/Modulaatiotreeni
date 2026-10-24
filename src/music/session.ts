@@ -3,7 +3,7 @@ import { keyById, pickNextKey, type DistanceLevel, type MusicKey } from "./keys"
 export interface SessionSettings {
   /** Mukana olevat sävellajit (soundId) */
   sounds: readonly string[];
-  distance: DistanceLevel;
+  distances: readonly DistanceLevel[];
   /** Sävellajin id (esim. "major:C") tai "random" */
   startKey: string;
 }
@@ -33,7 +33,7 @@ export class PracticeSession {
   advance(): MusicKey {
     const next = pickNextKey({
       sounds: this.settings.sounds,
-      distance: this.settings.distance,
+      distances: this.settings.distances,
       current: this.target,
       history: this.history,
       rng: this.rng,

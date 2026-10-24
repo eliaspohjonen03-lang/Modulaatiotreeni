@@ -10,7 +10,7 @@ import { TestPanel } from "./ui/TestPanel";
 
 const PRAISE_MS = 1500;
 
-const sessionSettings = (s: Settings) => ({ sounds: s.sounds, distance: s.distance, startKey: s.startKey });
+const sessionSettings = (s: Settings) => ({ sounds: s.sounds, distances: s.distances, startKey: s.startKey });
 
 export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings);

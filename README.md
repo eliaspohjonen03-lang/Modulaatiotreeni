@@ -30,7 +30,7 @@ Muut komennot:
 - **Vinkki-napista** (lamppu) aukeaa sointureitti edellisestä sävellajista uuteen. Ensin näytetään helpoin reitti, ja *＋ Toinen tapa* näyttää seuraavan tekniikan: yhteinen sointu, napolilainen sointu, samannimisen sävellajin kautta, vähennetty septimisointu, tritonussijainen tai suoraan dominanttiin. Vinkki piiloutuu, kun uusi tavoite tulee.
 - **Rataskuvakkeesta** aukeavat asetukset: mukana olevat sävellajit, vaikeustaso (modulaation etäisyys kvinttiympyrällä), lähtösävellaji, metronomi, mikrofonin herkkyys, viritys, soinnun minimikesto, yläsävelten vaimennus, äänimerkki ja testitila.
 - **Sävellajit mukana:** valitse yksittäisiä duureja ja molleja tai käytä pikavalintoja etumerkkien mukaan (0–2, 3–4, 5–6, kaikki). Enharmoniset sävellajit (Fis/Ges, dis/es) ovat yksi valinta.
-- **Vaikeustaso** kertoo, kuinka kaukana seuraava tavoite on edellisestä kvinttiympyrällä: Lähi 0–1 askelta, Keski 2–3, Kaukainen 4–6 (6 = tritonus). Jos valituista sävellajeista ei löydy sopivan etäistä, valitaan lähin.
+- **Vaikeustaso** kertoo, kuinka kaukana seuraava tavoite on edellisestä kvinttiympyrällä: Lähi 0–1 askelta, Keski 2–3, Kaukainen 4–6 (6 = tritonus). Tasoja voi valita useamman, esim. Lähi + Keski. Jos valituista sävellajeista ei löydy sopivan etäistä, valitaan lähin.
 - **Lähtösävellaji** on ensimmäinen tavoite (oletus C-duuri). Kun olet tehnyt siinä kadenssin, kierre alkaa. Valinnat vaikuttavat seuraavasta arvonnasta alkaen. *Aloita alusta* -napista kierre alkaa uudelleen lähtösävellajista.
 - Asetukset tallentuvat selaimen localStorageen.
 

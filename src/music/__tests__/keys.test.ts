@@ -67,24 +67,27 @@ describe("sävellajit ja etumerkit", () => {
 });
 
 describe("seuraavan sävellajin arvonta", () => {
-  const levels: DistanceLevel[] = ["near", "medium", "far", "all"];
+  const combos: DistanceLevel[][] = [["near"], ["medium"], ["far"], ["near", "medium"], ["near", "far"], ["near", "medium", "far"]];
 
-  for (const distance of levels)
-    it(`etäisyystaso ${distance}: aina sopivan etäinen, kun kaikki sävellajit mukana`, () => {
+  for (const distances of combos)
+    it(`etäisyystasot ${distances.join("+")}: aina sopivan etäinen, kun kaikki sävellajit mukana`, () => {
       const rng = seeded(42);
-      const [lo, hi] = DISTANCE_RANGES[distance];
+      const allowed = new Set(distances.flatMap((l) => { const [lo, hi] = DISTANCE_RANGES[l]; return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i); }));
+      const seen = new Set<number>();
       let current: MusicKey | null = null;
       const history: MusicKey[] = [];
       for (let i = 0; i < 300; i++) {
-        const next = pickNextKey({ sounds: ALL_SOUNDS, distance, current, history, rng });
+        const next = pickNextKey({ sounds: ALL_SOUNDS, distances, current, history, rng });
         if (current) {
           const d = fifthsDistance(current, next);
-          expect(d).toBeGreaterThanOrEqual(lo);
-          expect(d).toBeLessThanOrEqual(hi);
+          expect(allowed.has(d), `etäisyys ${d}`).toBe(true);
+          seen.add(d);
           history.push(current);
         }
         current = next;
       }
+      // Yhdistelmässä kaikkia tasoja todella arvotaan.
+      for (const l of distances) expect([...seen].some((d) => d >= DISTANCE_RANGES[l][0] && d <= DISTANCE_RANGES[l][1])).toBe(true);
     });
 
   it("vain valitut sävellajit", () => {
@@ -92,23 +95,23 @@ describe("seuraavan sävellajin arvonta", () => {
     const sounds = soundsWithAccidentals(0, 2).filter((s) => s.startsWith("minor"));
     let current: MusicKey | null = null;
     for (let i = 0; i < 200; i++) {
-      const next = pickNextKey({ sounds, distance: "all", current, history: [], rng });
+      const next = pickNextKey({ sounds, distances: [], current, history: [], rng });
       expect(sounds).toContain(soundId(next));
       current = next;
     }
   });
 
   it("tyhjä valinta = kaikki sävellajit", () => {
-    expect(ALL_SOUNDS).toContain(soundId(pickNextKey({ sounds: [], distance: "all", current: null, history: [], rng: seeded(1) })));
+    expect(ALL_SOUNDS).toContain(soundId(pickNextKey({ sounds: [], distances: [], current: null, history: [], rng: seeded(1) })));
   });
 
   it("ei sama kuin nykyinen eikä mikään kolmesta edellisestä (riittävän iso joukko)", () => {
     const rng = seeded(7);
-    for (const distance of ["all", "far"] as const) {
+    for (const distances of [[], ["far"]] as DistanceLevel[][]) {
       const seq: MusicKey[] = [];
       let current: MusicKey | null = null;
       for (let i = 0; i < 400; i++) {
-        const next = pickNextKey({ sounds: ALL_SOUNDS, distance, current, history: seq.slice(0, -1), rng });
+        const next = pickNextKey({ sounds: ALL_SOUNDS, distances, current, history: seq.slice(0, -1), rng });
         seq.push(next);
         current = next;
       }
@@ -124,7 +127,7 @@ describe("seuraavan sävellajin arvonta", () => {
     const sounds = ["major:0", "major:7"]; // C ja G: 1 askel
     let current: MusicKey = findKey("C", "major");
     for (let i = 0; i < 50; i++) {
-      const next = pickNextKey({ sounds, distance: "far", current, history: [], rng });
+      const next = pickNextKey({ sounds, distances: ["far"], current, history: [], rng });
       expect(soundId(next)).not.toBe(soundId(current));
       expect(sounds).toContain(soundId(next));
       current = next;
@@ -135,7 +138,7 @@ describe("seuraavan sävellajin arvonta", () => {
     const rng = seeded(3);
     let current: MusicKey = findKey("F#", "major");
     for (let i = 0; i < 200; i++) {
-      const next = pickNextKey({ sounds: soundsWithAccidentals(5, 7), distance: "all", current, history: [], rng });
+      const next = pickNextKey({ sounds: soundsWithAccidentals(5, 7), distances: [], current, history: [], rng });
       expect(soundId(next)).not.toBe(soundId(current));
       current = next;
     }
@@ -144,7 +147,7 @@ describe("seuraavan sävellajin arvonta", () => {
   it("pieni joukko: kierto käy kaikki läpi ilman välitöntä toistoa", () => {
     const rng = seeded(5);
     const sounds = soundsWithAccidentals(3, 4).filter((s) => s.startsWith("major"));
-    const session = new PracticeSession({ sounds, distance: "all", startKey: "random" }, rng);
+    const session = new PracticeSession({ sounds, distances: [], startKey: "random" }, rng);
     const seen = new Set<string>([session.target.id]);
     let prev = session.target;
     for (let i = 0; i < 50; i++) {
@@ -157,9 +160,9 @@ describe("seuraavan sävellajin arvonta", () => {
   });
 
   it("lähtösävellaji: valittu tai arvottu valituista", () => {
-    expect(new PracticeSession({ sounds: ALL_SOUNDS, distance: "far", startKey: "major:C" }).target.id).toBe("major:C");
+    expect(new PracticeSession({ sounds: ALL_SOUNDS, distances: ["far"], startKey: "major:C" }).target.id).toBe("major:C");
     const sounds = soundsWithAccidentals(3, 4).filter((s) => s.startsWith("minor"));
-    const s = new PracticeSession({ sounds, distance: "all", startKey: "random" }, seeded(1));
+    const s = new PracticeSession({ sounds, distances: [], startKey: "random" }, seeded(1));
     expect(sounds).toContain(soundId(s.target));
   });
 });

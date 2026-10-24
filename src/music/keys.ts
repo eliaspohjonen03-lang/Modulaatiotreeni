@@ -2,8 +2,8 @@ import { Key } from "tonal";
 import { finnishNoteName, mod12, nameToPc, type PitchClass } from "./notes";
 
 export type Mode = "major" | "minor";
-/** Modulaation vaikeus: etäisyys edellisestä sävellajista kvinttiympyrällä */
-export type DistanceLevel = "near" | "medium" | "far" | "all";
+/** Modulaation vaikeus: etäisyys edellisestä sävellajista kvinttiympyrällä (valinnat yhdisteltävissä) */
+export type DistanceLevel = "near" | "medium" | "far";
 
 export interface MusicKey {
   /** Esim. "major:F#" */
@@ -65,8 +65,9 @@ export const DISTANCE_RANGES: Record<DistanceLevel, [number, number]> = {
   near: [0, 1],
   medium: [2, 3],
   far: [4, 6],
-  all: [0, 6],
 };
+
+export const ALL_DISTANCES: readonly DistanceLevel[] = ["near", "medium", "far"];
 
 /** Valittavat sävellajit soivina (enharmoniset yhdessä), kvinttiympyrän järjestyksessä. */
 const CIRCLE_MAJOR = ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"];
@@ -107,7 +108,8 @@ export function signatureText(k: MusicKey): string {
 export interface PickOptions {
   /** Mukana olevat sävellajit (soundId); tyhjä = kaikki */
   sounds: readonly string[];
-  distance: DistanceLevel;
+  /** Sallitut etäisyystasot; tyhjä = kaikki */
+  distances: readonly DistanceLevel[];
   /** Nykyinen tavoite (ei saa toistua) */
   current: MusicKey | null;
   /** Aiemmat tavoitteet, uusin viimeisenä */
@@ -120,7 +122,7 @@ export interface PickOptions {
 /**
  * Arpoo seuraavan tavoitesävellajin valituista. Ei koskaan sama kuin nykyinen
  * eikä mikään kolmesta edellisestä; jos ehtoa ei voi täyttää, vanhimpia estoja
- * löysätään yksi kerrallaan. Etäisyystaso rajaa ehdokkaat kvinttiympyrän
+ * löysätään yksi kerrallaan. Valitut etäisyystasot rajaavat ehdokkaat kvinttiympyrän
  * askelten mukaan nykyisestä sävellajista. Jos valituista ei löydy yhtään
  * sopivan etäistä, valitaan lähimpänä tasoa olevat.
  */
@@ -134,12 +136,12 @@ export function pickNextKey(opts: PickOptions): MusicKey {
   const cur = opts.current;
   const currentId = cur ? soundId(cur) : null;
   const recent = opts.history.slice(-avoidLast).map(soundId);
-  const [lo, hi] = DISTANCE_RANGES[opts.distance];
-  /** Kuinka monta askelta etäisyystason ulkopuolella (0 = sopii) */
+  const ranges = (opts.distances.length > 0 ? opts.distances : ALL_DISTANCES).map((l) => DISTANCE_RANGES[l]);
+  /** Kuinka monta askelta lähimmän valitun etäisyystason ulkopuolella (0 = sopii) */
   const penalty = (id: string) => {
     if (!cur) return 0;
     const d = fifthsDistance(cur, spellingsOf(id)[0]);
-    return d < lo ? lo - d : d > hi ? d - hi : 0;
+    return Math.min(...ranges.map(([lo, hi]) => (d < lo ? lo - d : d > hi ? d - hi : 0)));
   };
 
   let candidates: string[] = [];

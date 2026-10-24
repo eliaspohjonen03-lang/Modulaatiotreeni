@@ -112,6 +112,29 @@ function KeyPicker({ value, onChange }: { value: string[]; onChange: (v: string[
   );
 }
 
+const DISTANCE_OPTIONS: [DistanceLevel, string][] = [["near", "Lähi 0–1"], ["medium", "Keski 2–3"], ["far", "Kaukainen 4–6"]];
+
+/** Etäisyystasot monivalintana; viimeistä valittua ei voi poistaa. */
+function DistancePicker({ value, onChange }: { value: DistanceLevel[]; onChange: (v: DistanceLevel[]) => void }) {
+  const all = DISTANCE_OPTIONS.every(([d]) => value.includes(d));
+  const toggle = (d: DistanceLevel) => {
+    if (!value.includes(d)) onChange(DISTANCE_OPTIONS.map(([x]) => x).filter((x) => x === d || value.includes(x)));
+    else if (value.length > 1) onChange(value.filter((x) => x !== d));
+  };
+  return (
+    <div className="segmented">
+      {DISTANCE_OPTIONS.map(([d, label]) => (
+        <button key={d} aria-pressed={value.includes(d)} className={value.includes(d) ? "sel" : ""} onClick={() => toggle(d)}>
+          {label}
+        </button>
+      ))}
+      <button aria-pressed={all} className={all ? "sel" : ""} onClick={() => onChange(DISTANCE_OPTIONS.map(([d]) => d))}>
+        Kaikki
+      </button>
+    </div>
+  );
+}
+
 const sortedKeys = (mode: "major" | "minor") => ALL_KEYS.filter((k) => k.mode === mode).sort((a, b) => a.accidentals - b.accidentals || Number(a.flats) - Number(b.flats));
 
 export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, onStartListening, onCalibrate, onRecordSample }: Props) {
@@ -156,8 +179,8 @@ export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, 
       <Section title="Harjoitus">
         <KeyPicker value={s.sounds} onChange={(sounds) => onChange({ sounds })} />
         <p className="label">Vaikeustaso: modulaation etäisyys</p>
-        <Segmented<DistanceLevel> value={s.distance} onChange={(distance) => onChange({ distance })} options={[["near", "Lähi 0–1"], ["medium", "Keski 2–3"], ["far", "Kaukainen 4–6"], ["all", "Kaikki"]]} />
-        <p className="hint">Askeleet kvinttiympyrällä edellisestä sävellajista. Jos valituista sävellajeista ei löydy sopivan etäistä, valitaan lähin.</p>
+        <DistancePicker value={s.distances} onChange={(distances) => onChange({ distances })} />
+        <p className="hint">Askeleet kvinttiympyrällä edellisestä sävellajista. Tasoja voi valita useamman. Jos valituista sävellajeista ei löydy sopivan etäistä, valitaan lähin.</p>
         <label className="field">
           <span className="label">Lähtösävellaji</span>
           <select value={s.startKey} onChange={(e) => onChange({ startKey: e.target.value })}>
