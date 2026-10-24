@@ -7,6 +7,13 @@
 - **Pääkäyttö tulee olemaan uruilla**, nyt testattiin pianolla. Korjausten pitää toimia molemmilla.
 - **Uutta:** *Asetukset → Testinäytteet* tallentaa mikrofonin spektrit ja tiedon soitetusta soinnusta. Kehityspalvelimessa (`npm run dev`) näyte menee suoraan kansioon `samples/`. Muuten se ladataan tiedostona, joka siirretään samaan kansioon.
 
+## Julkaisu
+- Verkossa: **https://eliaspohjonen03-lang.github.io/Modulaatiotreeni/** (GitHub Pages, julkinen repo `eliaspohjonen03-lang/Modulaatiotreeni`).
+- Jokainen `git push` main-haaraan ajaa testit ja julkaisee uuden version automaattisesti (`.github/workflows/deploy.yml`).
+- Push toimii SSH:lla. Muutoshistoriassa tekijänä on käyttäjänimi ja GitHubin piilo-osoite (asetettu vain tähän repoon).
+- `samples/` ei ole repossa (`.gitignore`), vaan näytteet ovat vain tällä koneella. Näytetestit ajetaan siksi vain paikallisesti.
+- iPhonella ei ole vielä testattu. Tarkistettavaa: äänimerkki äänettömällä, herkkyys, näytön pysyminen päällä. iPhonella tallennetut näytteet menevät Tiedostot-sovellukseen, josta ne siirretään `samples/`-kansioon.
+
 ## Tehty 24.10.2026 illalla: ensimmäiset pianonäytteet
 - 9 pianonäytettä: C, G7, Am, F, D, kadenssi C-duurissa, kadenssi D-duurissa ("ei yliselkeästi") ja 2 × hiljaisuus.
 - **Syy "yliselkeästi soittamiseen" löytyi:** yläsävelvähennys (60 %) poisti oikeasti soitetun kvintin. Esim. C3–C4–E4–G4: G4 tulkittiin C3:n 3. osasäveleksi ja nollattiin. Sointu jäi pelkäksi C+E:ksi, pisteet olivat juuri ja juuri rajan (0,78) yläpuolella, ja pianon vaimetessa sointu katosi.
