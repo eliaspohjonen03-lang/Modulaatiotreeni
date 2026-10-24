@@ -1,8 +1,8 @@
 # Jatkokehitys – tästä jatketaan
 
-## Tilanne (24.10.2026)
+## Tilanne (25.10.2026)
 - Demo valmis: `npm install` + `npm run dev` → http://localhost:5173/
-- 103 yksikkötestiä menee läpi (`npm test`), tyyppitarkistus ja build kunnossa.
+- 122 yksikkötestiä menee läpi (`npm test`), tyyppitarkistus ja build kunnossa.
 - **Ensimmäinen kokeilu oikealla soittimella (piano):** sointua ei aina tunnistettu. Piti soittaa "yliselkeästi", ennen kuin sovellus huomasi soinnun.
 - **Pääkäyttö tulee olemaan uruilla**, nyt testattiin pianolla. Korjausten pitää toimia molemmilla.
 - **Uutta:** *Asetukset → Testinäytteet* tallentaa mikrofonin spektrit ja tiedon soitetusta soinnusta. Kehityspalvelimessa (`npm run dev`) näyte menee suoraan kansioon `samples/`. Muuten se ladataan tiedostona, joka siirretään samaan kansioon.
@@ -13,6 +13,17 @@
 - Push toimii SSH:lla. Muutoshistoriassa tekijänä on käyttäjänimi ja GitHubin piilo-osoite (asetettu vain tähän repoon).
 - `samples/` ei ole repossa (`.gitignore`), vaan näytteet ovat vain tällä koneella. Näytetestit ajetaan siksi vain paikallisesti.
 - iPhonella ei ole vielä testattu. Tarkistettavaa: äänimerkki äänettömällä, herkkyys, näytön pysyminen päällä. iPhonella tallennetut näytteet menevät Tiedostot-sovellukseen, josta ne siirretään `samples/`-kansioon.
+
+## Tehty 25.10.2026: tempo, aloitusnäyttövihje, metronomin ääni
+- Soittonäkymässä on tempon säädin (− liukusäädin +), kun metronomi on päällä (`src/ui/TempoBar.tsx`).
+- Puhelimen selaimessa näytetään kerran vihje aloitusnäytölle lisäämisestä (`src/ui/InstallHint.tsx`).
+- Metronomin ääni on puukapulamainen (n. 2,5 kHz, `src/audio/metronome.ts`). Simulaatio oikeilla pianonäytteillä: tunnistus muuttui alle 1 %:ssa kehyksistä. Kysy kaverilta, miltä ääni kuulostaa ja häiritseekö se tunnistusta oikeassa käytössä.
+- Kaveri harkitsee linkin jakamista koulussaan. Sovellus ei kerää tietoja, joten tämä on ok. Muista, että päivitykset menevät kaikille yhtä aikaa.
+
+## Avoimet kysymykset kaverille
+- Tuntuvatko vinkkien sointureitit urkurin korvaan luontevilta?
+- Toimiiko tunnistus iPhonen mikrofonilla ja uruilla?
+- Miltä uusi metronomin ääni kuulostaa?
 
 ## Tehty: lähtösävellaji valitaan tai soitetaan
 - Oletuksena (`startKey: "ask"`) sovellus kysyy aloitettaessa "Mistä lähdetään?". Vastaukseksi kelpaa ruudukko, arvonta tai soitettu vakaa duuri- tai mollisointu (`keyFromChord`, `engine.onStableChord`). Ensimmäinen tavoite arvotaan heti siitä (`PracticeSession.startFrom`).
