@@ -1,12 +1,16 @@
 import { CadenceDetector } from "./cadence";
-import { detectChord, type Chord, type ChordMatch } from "./chords";
+import { detectChord, isTonicOf, type Chord, type ChordMatch } from "./chords";
 import { ChromaSmoother } from "./chroma";
 import { DEFAULT_KEY_SUPPORT, KeyEstimator, type KeySupport, type KeySupportOptions } from "./keyEstimate";
 import type { MusicKey } from "./keys";
 import type { PitchClass } from "./notes";
 import { ChordStabilizer, type StableChange } from "./stabilizer";
 
+/** Milloin tavoite täyttyy: kadenssi V(7) → I vai pelkkä tavoitesävellajin tonikasointu. */
+export type SuccessMode = "cadence" | "tonic";
+
 export interface TrackerOptions {
+  successOn: SuccessMode;
   minChordMs: number;
   agreement: number;
   smoothingMs: number;
@@ -20,6 +24,7 @@ export interface TrackerOptions {
 }
 
 export const DEFAULT_TRACKER_OPTIONS: TrackerOptions = {
+  successOn: "cadence",
   minChordMs: 400,
   agreement: 0.75,
   smoothingMs: 120,
@@ -36,6 +41,7 @@ export interface FrameResult {
   /** Vakaa sointu */
   stable: Chord | null;
   change: StableChange | null;
+  /** Tavoite täyttyi (kadenssi, tai tonikatilassa vakaa tonikasointu) */
   cadence: boolean;
   support: KeySupport;
 }
@@ -70,6 +76,12 @@ export class HarmonyTracker {
     this.stabilizer.minDurationMs = ms;
   }
 
+  setSuccessOn(mode: SuccessMode): void {
+    this.options.successOn = mode;
+    this.cadence.reset();
+    this.pendingUntil = null;
+  }
+
   /** Uusi tavoite: kadenssin tila nollataan, sävellajihistoria säilyy. */
   setTarget(key: MusicKey): void {
     this.target = key;
@@ -100,7 +112,9 @@ export class HarmonyTracker {
     const change = this.stabilizer.push(instant ? { root: instant.root, quality: instant.quality } : null, time);
     const support = this.keys.support(this.target, this.options.keySupport);
     let cadence = false;
-    if (change) {
+    if (this.options.successOn === "tonic") {
+      cadence = !!change?.chord && isTonicOf(change.chord, this.target);
+    } else if (change) {
       this.pendingUntil = null;
       // Rakenne (V–I) tarkistetaan ensin, sävellajituki sen jälkeen.
       if (this.cadence.onChord(change.chord, time, this.target, true)) {

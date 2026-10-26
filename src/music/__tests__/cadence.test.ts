@@ -119,3 +119,25 @@ describe("koko tunnistusketju (testitilan tapaan)", () => {
     expect(r.cadenceAt).toEqual([4]);
   });
 });
+
+describe("tonikatila (uusi sävellaji pelkästä tonikasoinnusta)", () => {
+  const C = findKey("C", "major");
+  const a = findKey("A", "minor");
+
+  it("pelkkä tavoitteen tonika riittää ilman dominanttia", () => {
+    expect(play(new HarmonyTracker(C, { successOn: "tonic" }), ["F", "C"]).cadenceAt).toEqual([1]);
+    expect(play(new HarmonyTracker(a, { successOn: "tonic" }), ["Am"]).cadenceAt).toEqual([0]);
+  });
+
+  it("väärä laatu tai muu sointu ei kelpaa", () => {
+    expect(play(new HarmonyTracker(a, { successOn: "tonic" }), ["A", "E7", "Dm"]).cadenceAt).toEqual([]);
+  });
+
+  it("tilan vaihto kesken kuuntelun", () => {
+    const t = new HarmonyTracker(C);
+    expect(play(t, ["F", "C"]).cadenceAt).toEqual([]);
+    t.setSuccessOn("tonic");
+    t.setTarget(findKey("G", "major"));
+    expect(play(t, ["G"], 5000).cadenceAt).toEqual([0]);
+  });
+});

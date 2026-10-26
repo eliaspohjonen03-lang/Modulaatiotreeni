@@ -57,7 +57,7 @@ export class PracticeEngine {
     private settings: Settings,
     target: MusicKey,
   ) {
-    this.tracker = new HarmonyTracker(target, { minChordMs: settings.minChordMs });
+    this.tracker = new HarmonyTracker(target, { minChordMs: settings.minChordMs, successOn: settings.successOn });
   }
 
   subscribe(fn: (s: EngineSnapshot) => void): () => void {
@@ -102,6 +102,7 @@ export class PracticeEngine {
   async applySettings(s: Settings): Promise<void> {
     this.settings = s;
     this.tracker.setMinChordMs(s.minChordMs);
+    if (s.successOn !== this.tracker.options.successOn) this.tracker.setSuccessOn(s.successOn);
     if (this.running) {
       await this.syncMic();
       this.syncMetronome();

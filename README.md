@@ -1,6 +1,6 @@
 # Modulaatiotreeni
 
-Harjoitussovellus urkureille ja pianisteille: soitat vapaata improvisaatiota, sovellus kuuntelee mikrofonilla ja näyttää isolla sävellajin, johon pitää moduloida. Kun soitat tavoitesävellajissa kadenssin **V (tai V7) → I**, sovellus soittaa äänimerkin, kehuu ja vaihtaa seuraavan tavoitteen.
+Harjoitussovellus urkureille ja pianisteille: soitat vapaata improvisaatiota, sovellus kuuntelee mikrofonilla ja näyttää isolla sävellajin, johon pitää moduloida. Kun soitat tavoitesävellajissa kadenssin **V (tai V7) → I**, sovellus soittaa äänimerkin, kehuu ja vaihtaa seuraavan tavoitteen. Asetuksista voi valita myös helpomman tavan, jossa pelkkä tavoitesävellajin tonikasointu riittää.
 
 Kaikki toimii selaimessa paikallisesti. Ei palvelinta, ei kirjautumista.
 

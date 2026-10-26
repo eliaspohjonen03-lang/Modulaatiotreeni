@@ -20,6 +20,10 @@
 - Metronomin ääni on puukapulamainen (n. 2,5 kHz, `src/audio/metronome.ts`). Simulaatio oikeilla pianonäytteillä: tunnistus muuttui alle 1 %:ssa kehyksistä. Kysy kaverilta, miltä ääni kuulostaa ja häiritseekö se tunnistusta oikeassa käytössä.
 - Kaveri harkitsee linkin jakamista koulussaan. Sovellus ei kerää tietoja, joten tämä on ok. Muista, että päivitykset menevät kaikille yhtä aikaa.
 
+## Tehty 26.10.2026: onnistumisen ehto valittavissa
+- *Asetukset → Harjoitus → "Uusi sävellaji annetaan, kun soitat"*: **Kadenssin V–I** (oletus, kuten ennen) tai **Tonikasoinnun**. Tonikatilassa riittää vakaa tavoitesävellajin I (mollissa i), eikä sävellajitukea vaadita (`successOn`, `HarmonyTracker.setSuccessOn`).
+- Huomio: tonikatilassa tavoite kuittautuu myös, jos tavoitteen tonika soi ohimennen modulaatioreitin keskellä. Kysy kaverilta, haittaako tämä.
+
 ## Avoimet kysymykset kaverille
 - Tuntuvatko vinkkien sointureitit urkurin korvaan luontevilta?
 - Toimiiko tunnistus iPhonen mikrofonilla ja uruilla?

@@ -190,6 +190,17 @@ export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, 
           </select>
         </label>
         <button className="btn" onClick={onRestart}>Aloita alusta lähtösävellajista</button>
+        <p className="label">Uusi sävellaji annetaan, kun soitat</p>
+        <Segmented
+          value={s.successOn}
+          options={[["cadence", "Kadenssin V–I"], ["tonic", "Tonikasoinnun"]]}
+          onChange={(successOn) => onChange({ successOn })}
+        />
+        <p className="hint">
+          {s.successOn === "cadence"
+            ? "Tavoitesävellajin dominantti (V tai V7) ja heti perään tonika."
+            : "Riittää, että soitat tavoitesävellajin tonikasoinnun ja pidät sitä hetken."}
+        </p>
         <Toggle label="Äänimerkki onnistuessa" checked={s.beep} onChange={(beep) => onChange({ beep })} />
       </Section>
 

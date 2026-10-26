@@ -1,5 +1,5 @@
 import {
-  ALL_SOUNDS, DEFAULT_CHROMA_OPTIONS, DEFAULT_TRACKER_OPTIONS, ALL_DISTANCES, soundsWithAccidentals, type DistanceLevel, type Instrument, type TimeSignature,
+  ALL_SOUNDS, DEFAULT_CHROMA_OPTIONS, DEFAULT_TRACKER_OPTIONS, ALL_DISTANCES, soundsWithAccidentals, type DistanceLevel, type Instrument, type SuccessMode, type TimeSignature,
 } from "./music";
 
 export interface Settings {
@@ -9,6 +9,8 @@ export interface Settings {
   distances: DistanceLevel[];
   /** "random" tai sävellajin id, esim. "major:C" */
   startKey: string;
+  /** Uusi sävellaji annetaan kadenssista vai pelkästä tonikasoinnusta */
+  successOn: SuccessMode;
   metronomeOn: boolean;
   bpm: number;
   signature: TimeSignature;
@@ -35,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sounds: soundsWithAccidentals(0, 2),
   distances: [...ALL_DISTANCES],
   startKey: "ask",
+  successOn: "cadence",
   metronomeOn: false,
   bpm: 80,
   signature: "4/4",
@@ -87,6 +90,7 @@ export function loadSettings(): Settings {
     const merged = { ...DEFAULT_SETTINGS, ...rest };
     merged.distances = merged.distances.filter((d) => ALL_DISTANCES.includes(d));
     if (merged.distances.length === 0) merged.distances = [...ALL_DISTANCES];
+    if (merged.successOn !== "cadence" && merged.successOn !== "tonic") merged.successOn = "cadence";
     merged.sounds = merged.sounds.filter((id) => ALL_SOUNDS.includes(id));
     return merged;
   } catch {
