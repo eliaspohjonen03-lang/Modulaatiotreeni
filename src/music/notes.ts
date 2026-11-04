@@ -13,6 +13,12 @@ export function pcToName(pc: PitchClass, preferFlats = false): string {
   return (preferFlats ? FLAT_NAMES : SHARP_NAMES)[mod12(pc)];
 }
 
+/** Sävelluokat, jotka yksittäisinä sävelinä kirjoitetaan tavallisesti alennettuina: Es, As ja B. */
+const COMMON_FLATS = new Set([3, 8, 10]);
+
+/** Sävelluokan tavallisin kirjoitusasu ilman sävellajia: "C#", "Eb", "F#", "Ab", "Bb". */
+export const commonNoteName = (pc: PitchClass): string => pcToName(pc, COMMON_FLATS.has(mod12(pc)));
+
 /** Sävelluokka kansainvälisestä nimestä ("F#", "Bb", "Cb" …). */
 export function nameToPc(name: string): PitchClass {
   const c = Note.chroma(name);

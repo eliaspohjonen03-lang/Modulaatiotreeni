@@ -51,4 +51,29 @@ describe("asetusten tallennus", () => {
     store.set(KEY, JSON.stringify({ v: 3, sounds: ["major:0"], distance: "all" }));
     expect(loadSettings().distances).toEqual(["near", "medium", "far"]);
   });
+
+  it("väärän tyyppiset ja alueen ulkopuoliset arvot korjataan", () => {
+    store.set(
+      KEY,
+      JSON.stringify({ v: 5, bpm: "80", refA: 9999, metronomeVolume: -1, sounds: "major:0", signature: "13/8", startKey: "major:X", thresholdDb: null, beep: "kyllä" }),
+    );
+    const s = loadSettings();
+    expect(s.bpm).toBe(DEFAULT_SETTINGS.bpm);
+    expect(s.refA).toBe(446);
+    expect(s.metronomeVolume).toBe(0);
+    expect(s.sounds).toEqual(DEFAULT_SETTINGS.sounds);
+    expect(s.signature).toBe(DEFAULT_SETTINGS.signature);
+    expect(s.startKey).toBe(DEFAULT_SETTINGS.startKey);
+    expect(s.thresholdDb).toBe(DEFAULT_SETTINGS.thresholdDb);
+    expect(s.beep).toBe(true);
+  });
+
+  it("tempo rajataan sallitulle alueelle, rikkinäinen JSON antaa oletukset", () => {
+    store.set(KEY, JSON.stringify({ v: 5, bpm: 0 }));
+    expect(loadSettings().bpm).toBe(30);
+    store.set(KEY, "[1,2]");
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    store.set(KEY, "{rikki");
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+  });
 });

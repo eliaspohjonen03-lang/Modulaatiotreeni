@@ -1,6 +1,6 @@
 import { chordId, sameChord, type Chord, type ChordMatch, type ChordQuality } from "./chords";
 import { computeChroma, DEFAULT_CHROMA_OPTIONS, type ChromaOptions } from "./chroma";
-import { pcToName, type PitchClass } from "./notes";
+import { commonNoteName, type PitchClass } from "./notes";
 import { DEFAULT_TRACKER_OPTIONS, HarmonyTracker, type TrackerOptions } from "./tracker";
 import { ALL_KEYS, type MusicKey } from "./keys";
 
@@ -75,7 +75,7 @@ const ASCII_SUFFIX: Record<ChordQuality, string> = { maj: "", min: "m", "7": "7"
 
 /** Tiedostonimiin sopiva nimi, esim. "G7", "Fism", "Bb". */
 export function chordAsciiLabel(c: Chord): string {
-  return pcToName(c.root, [3, 8, 10].includes(c.root)).replace("#", "is") + ASCII_SUFFIX[c.quality];
+  return commonNoteName(c.root).replace("#", "is") + ASCII_SUFFIX[c.quality];
 }
 
 // --- Uudelleenajo ---

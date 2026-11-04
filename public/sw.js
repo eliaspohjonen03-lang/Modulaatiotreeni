@@ -1,5 +1,5 @@
 // Yksinkertainen offline-välimuisti tuotantoversiolle (ei käytössä kehityspalvelimessa).
-const CACHE = "modulaatiotreeni-v2";
+const CACHE = "modulaatiotreeni-v3";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./manifest.webmanifest", "./icon.svg"])));
@@ -14,14 +14,25 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const { request } = event;
+  // Vain sovelluksen omat GET-pyynnöt: muiden sivustojen ja selainlaajennusten vastauksia ei tallenneta.
+  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(event.request, copy));
+        // Virhevastauksia (404, 500 …) ei tallenneta, jottei offline-tilassa näytetä niitä.
+        if (res.ok && res.type === "basic") {
+          const copy = res.clone();
+          event.waitUntil(caches.open(CACHE).then((c) => c.put(request, copy)));
+        }
         return res;
       })
-      .catch(() => caches.match(event.request).then((r) => r ?? caches.match("./"))),
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        // Sovelluksen etusivu vain sivulatauksille, ei esim. kuville tai skripteille.
+        if (request.mode === "navigate") return (await caches.match("./")) ?? Response.error();
+        return Response.error();
+      }),
   );
 });
