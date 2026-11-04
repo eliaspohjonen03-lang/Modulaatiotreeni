@@ -42,6 +42,7 @@ export class PracticeEngine {
   private frozenUntil = 0;
   private listeners = new Set<(s: EngineSnapshot) => void>();
   private calibrationSink: ((f: number) => void) | null = null;
+  private micSync: Promise<void> = Promise.resolve();
   private recording: { file: SampleFile; start: number; until: number; done: (f: SampleFile) => void } | null = null;
   testInput: TestInput | null = null;
   onCadence: (() => void) | null = null;
@@ -71,10 +72,12 @@ export class PracticeEngine {
     if (!this.ctx) this.ctx = new AudioContext({ latencyHint: "interactive" });
     if (this.ctx.state !== "running") await this.ctx.resume();
     this.snapshot.error = null;
-    await this.syncMic();
-    this.syncMetronome();
+    // Ajastin ensin: `running` on tosi jo mikrofoniluvan odottamisen aikana.
     if (this.timer === null) this.timer = window.setInterval(() => this.tick(), TICK_MS);
     this.snapshot.running = true;
+    await this.syncMic();
+    if (!this.running) return; // pysäytettiin odottaessa
+    this.syncMetronome();
     this.emit();
   }
 
@@ -184,16 +187,29 @@ export class PracticeEngine {
     }
   }
 
-  private async syncMic(): Promise<void> {
+  /**
+   * Avaa tai sulkee mikrofonin asetusten mukaan. Samanaikaiset kutsut (esim.
+   * käynnistys + asetusmuutos, tai kalibrointi kesken käynnistyksen) ketjutetaan,
+   * jottei getUserMedia avaa kahta virtaa, joista toinen jäisi auki.
+   */
+  private syncMic(): Promise<void> {
+    this.micSync = this.micSync.then(() => this.doSyncMic());
+    return this.micSync;
+  }
+
+  private async doSyncMic(): Promise<void> {
     if (!this.ctx) return;
-    const wantMic = !this.settings.testMode;
-    if (wantMic && !this.mic) {
+    const wantMic = () => this.running && !this.settings.testMode;
+    if (wantMic() && !this.mic) {
       try {
-        this.mic = await MicInput.open(this.ctx);
+        const mic = await MicInput.open(this.ctx);
+        // Pysäytetty tai testitilaan vaihdettu luvan odottamisen aikana: suljetaan heti.
+        if (wantMic()) this.mic = mic;
+        else mic.close();
       } catch (e) {
         this.snapshot.error = `Mikrofonia ei saatu käyttöön: ${(e as Error).message}`;
       }
-    } else if (!wantMic && this.mic) {
+    } else if (!wantMic() && this.mic) {
       this.mic.close();
       this.mic = null;
     }

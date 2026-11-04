@@ -33,11 +33,26 @@ export function App() {
   const [snap, setSnap] = useState<EngineSnapshot>(engine.snapshot);
 
   const wakeLock = useRef<ScreenWakeLock | null>(null);
-  const praiseActive = useRef(false);
+  /** Kehun jälkeinen siirtymä seuraavaan tavoitteeseen (null = ei käynnissä) */
+  const praiseTimer = useRef<number | null>(null);
   const lastPraise = useRef<string | null>(null);
 
+  /** Peruu kesken olevan kehun, jottei se siirrä juuri aloitettua kierrosta eteenpäin. */
+  const cancelPraise = useCallback(() => {
+    if (praiseTimer.current === null) return;
+    window.clearTimeout(praiseTimer.current);
+    praiseTimer.current = null;
+    setPraise(null);
+  }, []);
+
   useEffect(() => engine.subscribe(setSnap), [engine]);
-  useEffect(() => () => engine.stop(), [engine]);
+  useEffect(
+    () => () => {
+      cancelPraise();
+      engine.stop();
+    },
+    [engine, cancelPraise],
+  );
 
   useEffect(() => {
     saveSettings(settings);
@@ -47,26 +62,26 @@ export function App() {
 
   useEffect(() => {
     engine.onCadence = () => {
-      if (praiseActive.current) return;
-      praiseActive.current = true;
+      if (praiseTimer.current !== null) return;
       engine.success();
       engine.freeze(PRAISE_MS + 250);
       const text = randomPraise(lastPraise.current);
       lastPraise.current = text;
       setPraise(text);
-      window.setTimeout(() => {
+      praiseTimer.current = window.setTimeout(() => {
+        praiseTimer.current = null;
         const next = session.advance();
         engine.setTarget(next);
         setFrom(session.history.at(-1) ?? null);
         setTarget(next);
         setPraise(null);
-        praiseActive.current = false;
       }, PRAISE_MS);
     };
   }, [engine, session]);
 
   const chooseStart = useCallback(
     (picked: MusicKey | "random") => {
+      cancelPraise();
       const key = picked === "random" ? pickNextKey({ sounds: settings.sounds, distances: [], current: null, history: [] }) : picked;
       const next = session.startFrom(key);
       engine.setTarget(next);
@@ -74,13 +89,13 @@ export function App() {
       setTarget(next);
       setChoosing(false);
     },
-    [engine, session, settings.sounds],
+    [engine, session, settings.sounds, cancelPraise],
   );
 
   // Lähtösävellaji vaihdettiin asetuksista kiinteäksi kesken valinnan: aloitetaan siitä.
   useEffect(() => {
     if (settings.startKey === "ask" || !choosingRef.current) return;
-    session.restart({ sounds: settings.sounds, distances: settings.distances, startKey: settings.startKey });
+    session.restart(sessionSettings(settings));
     engine.setTarget(session.target);
     setTarget(session.target);
     setChoosing(false);
@@ -108,13 +123,14 @@ export function App() {
   }, [engine]);
 
   const restart = useCallback(() => {
+    cancelPraise();
     session.restart(sessionSettings(settings));
     engine.setTarget(session.target);
     setFrom(null);
     setTarget(session.target);
     setChoosing(settings.startKey === "ask");
     setView("practice");
-  }, [engine, session, settings]);
+  }, [engine, session, settings, cancelPraise]);
 
   const onTestInput = useCallback((i: TestInput | null) => {
     engine.testInput = i;
