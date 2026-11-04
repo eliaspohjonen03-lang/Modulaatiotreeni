@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import {
-  ALL_KEYS, clampBpm, finnishNoteName, keyDisplayName, MAX_BPM, MAX_REF_A, MIN_BPM, MIN_REF_A, pcToName, signatureText, tapTempo,
+  ALL_KEYS, clampBpm, commonNoteName, finnishNoteName, keyDisplayName, MAX_BPM, MAX_REF_A, MIN_BPM, MIN_REF_A, signatureText, tapTempo,
   ALL_SOUNDS, SELECTABLE_KEYS, soundsWithAccidentals,
   type DistanceLevel, type SampleFile, type SampleMeta, type TimeSignature,
 } from "../music";
@@ -9,6 +9,7 @@ import { DEFAULT_SETTINGS, type Settings } from "../settings";
 import { keyShortName } from "./format";
 import { LevelMeter } from "./LevelMeter";
 import { SampleRecorder } from "./SampleRecorder";
+import { Segmented } from "./Segmented";
 
 interface Props {
   settings: Settings;
@@ -19,18 +20,6 @@ interface Props {
   onStartListening: () => void;
   onCalibrate: () => Promise<{ refA: number | null; freq: number | null; samples: number }>;
   onRecordSample: (meta: SampleMeta, durationMs: number) => Promise<SampleFile>;
-}
-
-function Segmented<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
-  return (
-    <div className="segmented" role="radiogroup">
-      {options.map(([v, label]) => (
-        <button key={v} role="radio" aria-checked={value === v} className={value === v ? "sel" : ""} onClick={() => onChange(v)}>
-          {label}
-        </button>
-      ))}
-    </div>
-  );
 }
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -145,7 +134,7 @@ export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, 
 
   const calibrate = async () => {
     setCalibrating(true);
-    setCalib(`Soita nyt pitkä ${finnishNoteName(pcToName(s.calibrationPc))}-sävel (3 s)…`);
+    setCalib(`Soita nyt pitkä ${finnishNoteName(commonNoteName(s.calibrationPc))}-sävel (3 s)…`);
     try {
       const r = await onCalibrate();
       if (r.refA) {
@@ -239,7 +228,7 @@ export function SettingsView({ settings: s, snap, onChange, onClose, onRestart, 
             <span className="label">Kalibrointisävel</span>
             <select value={s.calibrationPc} onChange={(e) => onChange({ calibrationPc: Number(e.target.value) })}>
               {Array.from({ length: 12 }, (_, pc) => (
-                <option key={pc} value={pc}>{finnishNoteName(pcToName(pc, [3, 8, 10].includes(pc)))}</option>
+                <option key={pc} value={pc}>{finnishNoteName(commonNoteName(pc))}</option>
               ))}
             </select>
           </label>

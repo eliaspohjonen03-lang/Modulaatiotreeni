@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  chordLabel, finnishNoteName, pcToName, replaySample,
+  chordLabel, commonNoteName, finnishNoteName, replaySample,
   type ChordQuality, type Instrument, type SampleFile, type SampleMeta,
 } from "../music";
 import { saveSample } from "../audio/sampleSave";
 import type { Settings } from "../settings";
+import { Segmented } from "./Segmented";
 
 interface Props {
   settings: Settings;
@@ -14,7 +15,7 @@ interface Props {
 
 const INSTRUMENTS: [Instrument, string][] = [["piano", "Piano"], ["organ", "Urut"], ["other", "Muu"]];
 const QUALITIES: [ChordQuality, string][] = [["maj", "Duuri"], ["min", "Molli"], ["7", "7"], ["maj7", "maj7"], ["m7", "m7"], ["dim", "°"]];
-const DURATIONS = [3, 5, 10];
+const DURATIONS: [number, string][] = [3, 5, 10].map((d) => [d, `${d} s`]);
 
 interface Saved {
   name: string;
@@ -63,13 +64,7 @@ export function SampleRecorder({ settings: s, onChange, onRecord }: Props) {
         <b> Tallenna</b> ja soita heti. Uruilla pidä sointu koko tallennuksen ajan. Pianolla lyö sointu ja anna sen soida.
       </p>
       <p className="label">Soitin</p>
-      <div className="segmented" role="radiogroup">
-        {INSTRUMENTS.map(([v, label]) => (
-          <button key={v} role="radio" aria-checked={s.sampleInstrument === v} className={s.sampleInstrument === v ? "sel" : ""} onClick={() => onChange({ sampleInstrument: v })}>
-            {label}
-          </button>
-        ))}
-      </div>
+      <Segmented value={s.sampleInstrument} options={INSTRUMENTS} onChange={(sampleInstrument) => onChange({ sampleInstrument })} />
       <label className="field">
         <span className="label">Äänikerrat tai soittimen kuvaus</span>
         <input type="text" value={s.sampleRegistration} placeholder="esim. Principal 8' + Oktaavi 4' / pianino, oikea pedaali" onChange={(e) => onChange({ sampleRegistration: e.target.value })} />
@@ -79,31 +74,19 @@ export function SampleRecorder({ settings: s, onChange, onRecord }: Props) {
         <select value={root} onChange={(e) => setRoot(e.target.value === "free" ? "free" : Number(e.target.value))}>
           <option value="free">Vapaa soitto (esim. kadenssi tai improvisaatio)</option>
           {Array.from({ length: 12 }, (_, pc) => (
-            <option key={pc} value={pc}>{finnishNoteName(pcToName(pc, [3, 8, 10].includes(pc)))}-pohjainen sointu</option>
+            <option key={pc} value={pc}>{finnishNoteName(commonNoteName(pc))}-pohjainen sointu</option>
           ))}
         </select>
       </label>
       {root !== "free" && (
-        <div className="segmented" role="radiogroup">
-          {QUALITIES.map(([v, label]) => (
-            <button key={v} role="radio" aria-checked={quality === v} className={quality === v ? "sel" : ""} onClick={() => setQuality(v)}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <Segmented value={quality} options={QUALITIES} onChange={setQuality} />
       )}
       <label className="field">
         <span className="label">{root === "free" ? "Mitä soitit (valinnainen)" : "Äänenkuljetus (valinnainen)"}</span>
         <input type="text" value={voicing} placeholder={root === "free" ? "esim. C: I–IV–V7–I" : "esim. G2 H3 D4 F4"} onChange={(e) => setVoicing(e.target.value)} />
       </label>
       <p className="label">Kesto</p>
-      <div className="segmented" role="radiogroup">
-        {DURATIONS.map((d) => (
-          <button key={d} role="radio" aria-checked={seconds === d} className={seconds === d ? "sel" : ""} onClick={() => setSeconds(d)}>
-            {d} s
-          </button>
-        ))}
-      </div>
+      <Segmented value={seconds} options={DURATIONS} onChange={setSeconds} />
       <button className="btn primary" disabled={busy || s.testMode} onClick={() => void record()}>
         {busy ? `Tallennetaan… ${Math.max(0, left)} s` : `Tallenna ${root === "free" ? "näyte" : chordLabel({ root, quality })}`}
       </button>

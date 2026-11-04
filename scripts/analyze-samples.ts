@@ -7,7 +7,7 @@
  *   npm run samples -- --saved              tallennushetken asetuksilla
  *   npm run samples -- --frames=nimi        kehyskohtainen erittely tiedostoista, joiden nimessä on "nimi"
  */
-import { chordLabel, finnishNoteName, pcToName, replaySample, type Chord, type ChromaOptions, type TrackerOptions } from "../src/music";
+import { chordLabel, commonNoteName, finnishNoteName, replaySample, type Chord, type ChromaOptions, type TrackerOptions } from "../src/music";
 import { loadSampleFiles } from "../src/music/__tests__/sampleFiles";
 
 const args = new Map(
@@ -29,7 +29,7 @@ const thresholdDb = num("thresholdDb");
 const framesFilter = args.get("frames");
 
 const name = (c: Chord | null) => (c ? chordLabel(c) : "–");
-const pcName = (pc: number) => finnishNoteName(pcToName(pc, [3, 8, 10].includes(pc)));
+const pcName = (pc: number) => finnishNoteName(commonNoteName(pc));
 const pad = (s: string, n: number) => s.padEnd(n).slice(0, n);
 
 const samples = loadSampleFiles();
